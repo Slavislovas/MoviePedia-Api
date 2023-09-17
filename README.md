@@ -40,6 +40,7 @@ Funkciniai reikalavimai<br/>
   •	Administratorius galės:<br/>
     o	Valdyti naudotojų paskyras (sukurti naujus, pašalinti, redaguoti);<br/>
     o	Valdyti filmus (sukurti naujus, pašalinti, redaguoti);<br/>
+    o	Valdyti aktorius (sukurti naujus, pašalinti, redaguoti);<br/>
     o	Valdyti filmų atsiliepimus (pašalinti).<br/>
 
   •	Sistema galės:<br/>

@@ -16,6 +16,10 @@ Funkciniai reikalavimai<br/>
   •	Visi naudotojai galės:<br/>
     o	Peržiūrėti filmų sąrašą;<br/>
     o	Peržiūrėti konkretų filmą;<br/>
+    o	Peržiūrėti aktorių sąrašą;<br/>
+    o	Peržiūrėti konkretų aktorių;<br/>
+    o	Peržiūrėti režisierių sąrašą;<br/>
+    o	Peržiūrėti konkretų režisierių;<br/>
     o	Atlikti filmų paiešką pagal įvairius kriterijus (pvz., pavadinimą, režisierių,  aktorius).<br/>
 
   •	Svečias galės:<br/>
@@ -34,13 +38,21 @@ Funkciniai reikalavimai<br/>
     o	Peržiūrėti norimų peržiūrėti filmų sąrašą („Žiūrėjimo sąrašas“);<br/>
     o	Įvertinti filmą skalėje nuo 1 iki 10;<br/>
     o	Rašyti filmams atsiliepimus;<br/>
+    o	Pašalinti savo parašytą filmo atsiliepimą;<br/>
     o	Skaityti kitų naudotojų filmų atsiliepimus;<br/>
     o	Įvertinti kitų naudotojų filmų atsiliepimus (spausti „Patinka“, „Nepatinka“).<br/>
 
-  •	Administratorius galės:<br/>
-    o	Valdyti naudotojų paskyras (sukurti naujus, pašalinti, redaguoti);<br/>
-    o	Valdyti filmus (sukurti naujus, pašalinti, redaguoti);<br/>
-    o	Valdyti aktorius (sukurti naujus, pašalinti, redaguoti);<br/>
+  •	Turinio kuratorius galės:<br/>
+    o	Prisijungti prie sistemos;<br/>
+    o	Atsijungti nuo sistemos;<br/>
+    o	Valdyti aktorius (sukurti naujus, pašalinti, redaguoti esamus);<br/>
+    o	Valdyti filmus (sukurti naujus, pašalinti, redaguoti esamus);<br/>
+    o	Valdyti režisierius (sukurti naujus, pašalinti, redaguoti esamus).<br/>
+
+   •	Administratorius galės:<br/>
+    o	Daryti viską, ką gali registruotas naudotojas;<br/>
+    o	Daryti viską, ką gali turinio kuratorius;<br/>
+    o	Valdyti registruotų naudotojų ir turinio kuratorių paskyras (sukurti naujus, pašalinti, redaguoti esamus);<br/>
     o	Valdyti filmų atsiliepimus (pašalinti).<br/>
 
   •	Sistema galės:<br/>

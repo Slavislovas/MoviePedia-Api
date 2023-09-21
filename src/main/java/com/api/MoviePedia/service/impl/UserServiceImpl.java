@@ -16,7 +16,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -40,8 +42,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserRetrievalDto getLoggedInUserProfile() {
-        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    public UserRetrievalDto getUserById(Long userId) {
+        Role role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream().map(x -> Role.valueOf(x.getAuthority())).toList().get(0);
+        if (role == Role.ROLE_USER ){
+            Long authenticatedUserId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            if (!Objects.equals(authenticatedUserId, userId)){
+                throw new SecurityException("Users can only view their own profile");
+            }
+        }
         Optional<UserEntity> optionalUserEntity = userRepository.findById(userId);
         if (optionalUserEntity.isEmpty()){
             throw new NoSuchElementException("User with id: " + userId + " does not exist");
@@ -50,20 +58,26 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserRetrievalDto editLoggedInUserProfile(UserEditDto editDto) {
-        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        Optional<UserEntity> optionalUserEntityByUsername = userRepository.findById(userId);
-        if (optionalUserEntityByUsername.isEmpty()){
+    public UserRetrievalDto editUserById(UserEditDto editDto, Long userId) {
+        Role role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream().map(x -> Role.valueOf(x.getAuthority())).toList().get(0);
+        if (role == Role.ROLE_USER ){
+            Long authenticatedUserId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            if (!Objects.equals(authenticatedUserId, userId)){
+                throw new SecurityException("Users can only edit their own profile");
+            }
+        }
+        Optional<UserEntity> optionalUserEntityById = userRepository.findById(userId);
+        if (optionalUserEntityById.isEmpty()){
             throw new NoSuchElementException("User with id: " + userId + " does not exist");
         }
         Optional<UserEntity> optionalUserEntityByEmail = userRepository.findByEmail(editDto.getEmail());
-        if (optionalUserEntityByEmail.isPresent() && ! optionalUserEntityByUsername.get().getEmail().equals(optionalUserEntityByEmail.get().getEmail())){
+        if (optionalUserEntityByEmail.isPresent() && ! optionalUserEntityById.get().getEmail().equals(optionalUserEntityByEmail.get().getEmail())){
             throw new DuplicateDatabaseEntryException("Email: " + editDto.getEmail() + " is already taken");
         }
-        UserEntity userEntity = userMapper.editDtoToEntity(editDto, optionalUserEntityByUsername.get().getId(), optionalUserEntityByUsername.get().getUsername(),
-                                                            optionalUserEntityByUsername.get().getPassword(), optionalUserEntityByUsername.get().getRole(),
-                                                            optionalUserEntityByUsername.get().getWatchlist(), optionalUserEntityByUsername.get().getWatchedMovies(),
-                                                            optionalUserEntityByUsername.get().getReviews());
+        UserEntity userEntity = userMapper.editDtoToEntity(editDto, optionalUserEntityById.get().getId(), optionalUserEntityById.get().getUsername(),
+                                                            optionalUserEntityById.get().getPassword(), optionalUserEntityById.get().getRole(),
+                                                            optionalUserEntityById.get().getWatchlist(), optionalUserEntityById.get().getWatchedMovies(),
+                                                            optionalUserEntityById.get().getReviews());
         return userMapper.entityToRetrievalDto(userRepository.save(userEntity));
     }
 

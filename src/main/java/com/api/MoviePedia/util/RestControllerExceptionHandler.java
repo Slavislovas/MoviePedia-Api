@@ -48,27 +48,32 @@ public class RestControllerExceptionHandler {
     }
 
     @ExceptionHandler(value =ExpiredJwtException.class)
-    public ResponseEntity<ExceptionErrorModel> handleExpiredJwtExceptionException(ExpiredJwtException exception, HttpServletRequest request){
+    public ResponseEntity<ExceptionErrorModel> handleExpiredJwtException(ExpiredJwtException exception, HttpServletRequest request){
         return new ResponseEntity<>(new ExceptionErrorModel(LocalDateTime.now(), 401, exception.getMessage(), request.getServletPath()), HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler(value = MalformedJwtException.class)
-    public ResponseEntity<ExceptionErrorModel> handleMalformedJwtExceptionException(MalformedJwtException exception, HttpServletRequest request){
+    public ResponseEntity<ExceptionErrorModel> handleMalformedJwtException(MalformedJwtException exception, HttpServletRequest request){
         return new ResponseEntity<>(new ExceptionErrorModel(LocalDateTime.now(), 401, exception.getMessage(), request.getServletPath()), HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler(value = UnsupportedJwtException.class)
-    public ResponseEntity<ExceptionErrorModel> handleUnsupportedJwtExceptionException(UnsupportedJwtException exception, HttpServletRequest request){
+    public ResponseEntity<ExceptionErrorModel> handleUnsupportedJwtException(UnsupportedJwtException exception, HttpServletRequest request){
         return new ResponseEntity<>(new ExceptionErrorModel(LocalDateTime.now(), 401, exception.getMessage(), request.getServletPath()), HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler(value = SignatureException.class)
-    public ResponseEntity<ExceptionErrorModel> handleSignatureExceptionException(SignatureException exception, HttpServletRequest request){
+    public ResponseEntity<ExceptionErrorModel> handleSignatureException(SignatureException exception, HttpServletRequest request){
         return new ResponseEntity<>(new ExceptionErrorModel(LocalDateTime.now(), 401, exception.getMessage(), request.getServletPath()), HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler(value = IllegalStateException.class)
-    public ResponseEntity<ExceptionErrorModel> handleIllegalStateExceptionException(IllegalStateException exception, HttpServletRequest request){
+    public ResponseEntity<ExceptionErrorModel> handleIllegalStateException(IllegalStateException exception, HttpServletRequest request){
         return new ResponseEntity<>(new ExceptionErrorModel(LocalDateTime.now(), 401, exception.getMessage(), request.getServletPath()), HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(value = SecurityException.class)
+    public ResponseEntity<ExceptionErrorModel> handleSecurityExceptionException(SecurityException exception, HttpServletRequest request){
+        return new ResponseEntity<>(new ExceptionErrorModel(LocalDateTime.now(), 403, exception.getMessage(), request.getServletPath()), HttpStatus.FORBIDDEN);
     }
 }

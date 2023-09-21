@@ -1,6 +1,7 @@
 package com.api.MoviePedia.service.impl;
 
 import com.api.MoviePedia.builder.MovieSpecificationBuilder;
+import com.api.MoviePedia.enumeration.Role;
 import com.api.MoviePedia.model.MovieCreationDto;
 import com.api.MoviePedia.model.MovieRetrievalDto;
 import com.api.MoviePedia.model.SearchCriteriaDto;
@@ -31,6 +32,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -153,12 +155,12 @@ public class MovieServiceImpl implements MovieService {
     }
 
     @Override
-    public void addMovieToLoggedInUserWatchedMoviesById(Long movieId) {
+    public void addMovieToWatchedMovies(Long movieId, Long userId) {
+       validateUserPermissions(userId, "Users can only add movies to their own watched movies list");
         Optional<MovieEntity> optionalMovieEntity = movieRepository.findById(movieId);
         if (optionalMovieEntity.isEmpty()){
             throw new NoSuchElementException("Movie with id: " + movieId  + " does not exist");
         }
-        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         UserEntity userEntity = userService.getUserEntityById(userId);
         MovieEntity movieEntity = optionalMovieEntity.get();
         userEntity.getWatchedMovies().add(movieEntity);
@@ -166,15 +168,65 @@ public class MovieServiceImpl implements MovieService {
     }
 
     @Override
-    public void addMovieToLoggedInUserWatchlistById(Long movieId) {
+    public void addMovieToWatchlist(Long movieId, Long userId) {
+        validateUserPermissions(userId, "Users can only add movies to their own watchlist");
         Optional<MovieEntity> optionalMovieEntity = movieRepository.findById(movieId);
         if (optionalMovieEntity.isEmpty()){
             throw new NoSuchElementException("Movie with id: " + movieId  + " does not exist");
         }
-        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         UserEntity userEntity = userService.getUserEntityById(userId);
         MovieEntity movieEntity = optionalMovieEntity.get();
         userEntity.getWatchlist().add(movieEntity);
         movieRepository.save(movieEntity);
+    }
+
+    @Override
+    public void deleteMovieFromWatchedMovies(Long movieId, Long userId) {
+        validateUserPermissions(userId, "Users can only delete movies from their own watched movies list");
+        Optional<MovieEntity> optionalMovieEntity = movieRepository.findById(movieId);
+        if (optionalMovieEntity.isEmpty()){
+            throw new NoSuchElementException("Movie with id: " + movieId  + " does not exist");
+        }
+        UserEntity userEntity = userService.getUserEntityById(userId);
+        MovieEntity movieEntity = optionalMovieEntity.get();
+        userEntity.getWatchedMovies().remove(movieEntity);
+        movieRepository.save(movieEntity);
+    }
+
+    @Override
+    public void deleteMovieFromWatchlist(Long movieId, Long userId) {
+        validateUserPermissions(userId, "Users can only delete movies from their own watchlist");
+        Optional<MovieEntity> optionalMovieEntity = movieRepository.findById(movieId);
+        if (optionalMovieEntity.isEmpty()){
+            throw new NoSuchElementException("Movie with id: " + movieId  + " does not exist");
+        }
+        UserEntity userEntity = userService.getUserEntityById(userId);
+        MovieEntity movieEntity = optionalMovieEntity.get();
+        userEntity.getWatchlist().remove(movieEntity);
+        movieRepository.save(movieEntity);
+    }
+
+    @Override
+    public Set<MovieRetrievalDto> getWatchedMoviesByUserId(Long userId) {
+        validateUserPermissions(userId, "Users can only view their own watched movies list");
+        UserEntity userEntity = userService.getUserEntityById(userId);
+        return userEntity.getWatchedMovies().stream().map(movieMapper::entityToRetrievalDto).collect(Collectors.toSet());
+    }
+
+    @Override
+    public Set<MovieRetrievalDto> getWatchlistByUserId(Long userId) {
+        validateUserPermissions(userId, "Users can only view their own watchlist");
+        UserEntity userEntity = userService.getUserEntityById(userId);
+        return userEntity.getWatchlist().stream().map(movieMapper::entityToRetrievalDto).collect(Collectors.toSet());
+    }
+
+    private void validateUserPermissions(Long userId, String errorMessage) {
+        Role role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream().map(x -> Role.valueOf(x.getAuthority())).toList().get(0);
+        if (role == Role.ROLE_USER){
+            Long authenticatedUserId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            if (!Objects.equals(authenticatedUserId, userId)){
+                throw new SecurityException(errorMessage);
+            }
+        }
     }
 }

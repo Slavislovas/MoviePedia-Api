@@ -8,9 +8,9 @@ import com.api.MoviePedia.repository.model.UserEntity;
 public interface UserService {
     UserRetrievalDto registerUser(UserCreationDto creationDto);
 
-    UserRetrievalDto getLoggedInUserProfile();
+    UserRetrievalDto getUserById(Long userId);
 
-    UserRetrievalDto editLoggedInUserProfile(UserEditDto editDto);
+    UserRetrievalDto editUserById(UserEditDto editDto, Long userId);
 
     UserEntity getUserEntityById(Long id);
 }

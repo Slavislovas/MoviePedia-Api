@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @RequestMapping("/movie")
 @RequiredArgsConstructor
@@ -42,6 +43,16 @@ public class MovieController {
         return new ResponseEntity<>(movieService.getMovieById(movieId), HttpStatus.FOUND);
     }
 
+    @GetMapping("/get/watched_movies/{id}")
+    public ResponseEntity<Set<MovieRetrievalDto>> getWatchedMoviesByUserId(@PathVariable("id") Long userId){
+        return ResponseEntity.ok(movieService.getWatchedMoviesByUserId(userId));
+    }
+
+    @GetMapping("/get/watchlist/{id}")
+    public ResponseEntity<Set<MovieRetrievalDto>> getWatchlistByUserId(@PathVariable("id") Long userId){
+        return ResponseEntity.ok(movieService.getWatchlistByUserId(userId));
+    }
+
     @PostMapping("/search")
     public ResponseEntity<List<MovieRetrievalDto>> getMoviesBySearchCriteria(@RequestParam(name = "pageNum", defaultValue = "0") Integer pageNum,
                                                                              @RequestParam(name = "pageSize", defaultValue = "10") Integer pageSize,
@@ -55,15 +66,15 @@ public class MovieController {
         return new ResponseEntity<>(movieService.createMovie(movieCreationDto), HttpStatus.CREATED);
     }
 
-    @PostMapping("/add/watched_movies/{id}")
-    public ResponseEntity<Void> addMovieToLoggedInUserWatchedMoviesById(@PathVariable("id") Long movieId){
-        movieService.addMovieToLoggedInUserWatchedMoviesById(movieId);
+    @PostMapping("/add/{movieId}/watched_movies/{userId}")
+    public ResponseEntity<Void> addMovieToWatchedMovies(@PathVariable("movieId") Long movieId, @PathVariable("userId") Long userId){
+        movieService.addMovieToWatchedMovies(movieId, userId);
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/add/watchlist/{id}")
-    public ResponseEntity<Void> addMovieToLoggedInUserWatchlistById(@PathVariable("id") Long movieId){
-        movieService.addMovieToLoggedInUserWatchlistById(movieId);
+    @PostMapping("/add/{movieId}/watchlist/{userId}")
+    public ResponseEntity<Void> addMovieToWatchlist(@PathVariable("movieId") Long movieId, @PathVariable("userId") Long userId){
+        movieService.addMovieToWatchlist(movieId, userId);
         return ResponseEntity.ok().build();
     }
 
@@ -77,6 +88,18 @@ public class MovieController {
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<Void> deleteMovieById(@PathVariable("id") Long movieId){
         movieService.deleteMovieById(movieId);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/delete/{movieId}/watched_movies/{userId}")
+    public ResponseEntity<Void> deleteMovieFromWatchedMovies(@PathVariable("movieId") Long movieId, @PathVariable("userId") Long userId){
+        movieService.deleteMovieFromWatchedMovies(movieId, userId);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/delete/{movieId}/watchlist/{userId}")
+    public ResponseEntity<Void> deleteMovieFromWatchlist(@PathVariable("movieId") Long movieId, @PathVariable("userId") Long userId){
+        movieService.deleteMovieFromWatchlist(movieId, userId);
         return ResponseEntity.ok().build();
     }
 

@@ -2,11 +2,11 @@ package com.api.MoviePedia.service;
 
 import com.api.MoviePedia.model.MovieCreationDto;
 import com.api.MoviePedia.model.MovieRetrievalDto;
-import com.api.MoviePedia.model.SearchCriteriaDto;
 import com.api.MoviePedia.model.SearchDto;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 
 public interface MovieService {
     List<MovieRetrievalDto> getAllMovies();
@@ -21,7 +21,15 @@ public interface MovieService {
 
     List<MovieRetrievalDto> getMoviesBySearchCriteria(SearchDto searchDto, Integer pageNumber, Integer pageSize);
 
-    void addMovieToLoggedInUserWatchedMoviesById(Long movieId);
+    void addMovieToWatchedMovies(Long movieId, Long userId);
 
-    void addMovieToLoggedInUserWatchlistById(Long movieId);
+    void addMovieToWatchlist(Long movieId, Long userId);
+
+    void deleteMovieFromWatchedMovies(Long movieId, Long userId);
+
+    void deleteMovieFromWatchlist(Long movieId, Long userId);
+
+    Set<MovieRetrievalDto> getWatchedMoviesByUserId(Long userId);
+
+    Set<MovieRetrievalDto> getWatchlistByUserId(Long userId);
 }

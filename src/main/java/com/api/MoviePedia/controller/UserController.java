@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -28,9 +29,9 @@ import java.util.List;
 public class UserController {
     private final UserService userService;
 
-    @GetMapping("/profile")
-    public ResponseEntity<UserRetrievalDto> getLoggedInUserProfile(){
-        return new ResponseEntity<>(userService.getLoggedInUserProfile(), HttpStatus.FOUND);
+    @GetMapping("/get/{id}")
+    public ResponseEntity<UserRetrievalDto> getUserById(@PathVariable("id") Long userId){
+        return new ResponseEntity<>(userService.getUserById(userId), HttpStatus.FOUND);
     }
 
     @PostMapping("/register")
@@ -39,10 +40,10 @@ public class UserController {
         return new ResponseEntity<>(userService.registerUser(creationDto), HttpStatus.CREATED);
     }
 
-    @PutMapping("/profile/edit")
-    public ResponseEntity<UserRetrievalDto> editLoggedInUserProfile(@RequestBody @Valid UserEditDto editDto, BindingResult bindingResult){
+    @PutMapping("/edit/{id}")
+    public ResponseEntity<UserRetrievalDto> editUserById(@PathVariable("id") Long id, @RequestBody @Valid UserEditDto editDto, BindingResult bindingResult){
         validateRequestBodyFields(bindingResult);
-        return ResponseEntity.ok(userService.editLoggedInUserProfile(editDto));
+        return ResponseEntity.ok(userService.editUserById(editDto, id));
     }
 
     private void validateRequestBodyFields(BindingResult bindingResult) {

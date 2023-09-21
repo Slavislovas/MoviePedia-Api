@@ -37,11 +37,11 @@ public class ReviewEntity {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
-    private UserEntity reviewerEntity;
+    private UserEntity reviewer;
 
     @ManyToOne
     @JoinColumn(name = "movie_id", nullable = false)
-    private MovieEntity movieEntity;
+    private MovieEntity movie;
 
     public void incrementLikes(){
         this.likes++;

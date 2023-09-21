@@ -10,14 +10,17 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDate;
 import java.util.Set;
 
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
+@Getter
+@Setter
 @Entity
 @Table(name = "directors")
 public class DirectorEntity {
@@ -35,13 +38,12 @@ public class DirectorEntity {
     @Column(name = "dateOfBirth")
     private LocalDate dateOfBirth;
 
-    @Column(name = "biography")
+    @Column(name = "biography", columnDefinition = "TEXT")
     private String biography;
 
-    @Column(name = "picture", columnDefinition = "MEDIUMBLOB")
-    @Lob
-    private Byte[] picture;
+    @Column(name = "pictureFilePath")
+    private String pictureFilePath;
 
-    @OneToMany(mappedBy = "directorEntity")
-    private Set<MovieEntity> movieEntities;
+    @OneToMany(mappedBy = "director")
+    private Set<MovieEntity> movies;
 }

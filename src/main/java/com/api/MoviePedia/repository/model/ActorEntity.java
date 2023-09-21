@@ -2,22 +2,25 @@ package com.api.MoviePedia.repository.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDate;
 import java.util.Set;
 
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
+@Getter
+@Setter
 @Entity
 @Table(name = "actors")
 public class ActorEntity {
@@ -35,13 +38,12 @@ public class ActorEntity {
     @Column(name = "dateOfBirth")
     private LocalDate dateOfBirth;
 
-    @Column(name = "biography")
+    @Column(name = "biography", columnDefinition = "TEXT")
     private String biography;
 
-    @Column(name = "picture", columnDefinition = "MEDIUMBLOB")
-    @Lob
-    private Byte[] picture;
+    @Column(name = "pictureFilePath")
+    private String pictureFilePath;
 
-    @ManyToMany(mappedBy = "actorEntities")
-    private Set<MovieEntity> movieEntities;
+    @ManyToMany(mappedBy = "actors", fetch = FetchType.EAGER)
+    private Set<MovieEntity> movies;
 }

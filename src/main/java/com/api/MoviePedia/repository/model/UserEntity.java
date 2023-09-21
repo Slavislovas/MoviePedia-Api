@@ -62,6 +62,6 @@ public class UserEntity {
     )
     private Set<MovieEntity> watchedMovies;
 
-    @OneToMany(mappedBy = "reviewerEntity")
-    private Set<ReviewEntity> reviewEntities;
+    @OneToMany(mappedBy = "reviewer")
+    private Set<ReviewEntity> reviews;
 }

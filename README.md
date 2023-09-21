@@ -20,6 +20,7 @@ Funkciniai reikalavimai<br/>
     o	Peržiūrėti konkretų aktorių;<br/>
     o	Peržiūrėti režisierių sąrašą;<br/>
     o	Peržiūrėti konkretų režisierių;<br/>
+    o	Skaityti kitų naudotojų filmų atsiliepimus;<br/>
     o	Atlikti filmų paiešką pagal įvairius kriterijus (pvz., pavadinimą, režisierių,  aktorius).<br/>
 
   •	Svečias galės:<br/>
@@ -39,7 +40,6 @@ Funkciniai reikalavimai<br/>
     o	Įvertinti filmą skalėje nuo 1 iki 10;<br/>
     o	Rašyti filmams atsiliepimus;<br/>
     o	Pašalinti savo parašytą filmo atsiliepimą;<br/>
-    o	Skaityti kitų naudotojų filmų atsiliepimus;<br/>
     o	Įvertinti kitų naudotojų filmų atsiliepimus (spausti „Patinka“, „Nepatinka“).<br/>
 
   •	Turinio kuratorius galės:<br/>

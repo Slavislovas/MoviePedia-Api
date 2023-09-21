@@ -55,6 +55,18 @@ public class MovieController {
         return new ResponseEntity<>(movieService.createMovie(movieCreationDto), HttpStatus.CREATED);
     }
 
+    @PostMapping("/add/watched_movies/{id}")
+    public ResponseEntity<Void> addMovieToLoggedInUserWatchedMoviesById(@PathVariable("id") Long movieId){
+        movieService.addMovieToLoggedInUserWatchedMoviesById(movieId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/add/watchlist/{id}")
+    public ResponseEntity<Void> addMovieToLoggedInUserWatchlistById(@PathVariable("id") Long movieId){
+        movieService.addMovieToLoggedInUserWatchlistById(movieId);
+        return ResponseEntity.ok().build();
+    }
+
     @PutMapping("/edit/{id}")
     public ResponseEntity<MovieRetrievalDto> editMovieById(@PathVariable("id") Long movieId, @RequestBody @Valid MovieCreationDto movieCreationDto,
                                                            BindingResult bindingResult) throws IOException {

@@ -20,4 +20,8 @@ public interface MovieService {
     void deleteMovieById(Long movieId);
 
     List<MovieRetrievalDto> getMoviesBySearchCriteria(SearchDto searchDto, Integer pageNumber, Integer pageSize);
+
+    void addMovieToLoggedInUserWatchedMoviesById(Long movieId);
+
+    void addMovieToLoggedInUserWatchlistById(Long movieId);
 }

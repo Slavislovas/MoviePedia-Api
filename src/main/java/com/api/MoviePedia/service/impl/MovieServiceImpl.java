@@ -14,6 +14,7 @@ import com.api.MoviePedia.service.ActorService;
 import com.api.MoviePedia.service.DirectorService;
 import com.api.MoviePedia.service.FileStorageService;
 import com.api.MoviePedia.service.MovieService;
+import com.api.MoviePedia.service.UserService;
 import com.api.MoviePedia.util.ImageComparator;
 import com.api.MoviePedia.util.mapper.MovieMapper;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -42,6 +44,7 @@ public class MovieServiceImpl implements MovieService {
     private final FileStorageService fileStorageService;
     private final DirectorService directorService;
     private final ActorService actorService;
+    private final UserService userService;
 
     @Override
     public List<MovieRetrievalDto> getAllMovies() {
@@ -109,22 +112,6 @@ public class MovieServiceImpl implements MovieService {
         movieRepository.deleteById(movieId);
     }
 
-    @Override
-    public List<MovieRetrievalDto> getMoviesBySearchCriteria(SearchDto searchDto, Integer pageNumber, Integer pageSize) {
-        MovieSpecificationBuilder movieSpecificationBuilder = new MovieSpecificationBuilder();
-        List<SearchCriteriaDto> criteriaList = searchDto.getSearchCriteriaList();
-        if (criteriaList != null){
-            criteriaList.forEach(criteria -> {
-                criteria.setDataOption(searchDto.getDataOption());
-                movieSpecificationBuilder.with(criteria);
-            });
-        }
-        Specification<MovieEntity> movieSpecification = movieSpecificationBuilder.build();
-        Pageable page = PageRequest.of(pageNumber, pageSize, Sort.by("year").descending());
-        Page<MovieEntity> moviePage = movieRepository.findAll(movieSpecification, page);
-        return moviePage.toList().stream().map(movieMapper::entityToRetrievalDto).collect(Collectors.toList());
-    }
-
     private void removeActorsFromMovie(MovieEntity movieEntity) {
         for (Iterator<ActorEntity> iterator = movieEntity.getActors().iterator(); iterator.hasNext();){
             ActorEntity actorEntity = iterator.next();
@@ -149,4 +136,45 @@ public class MovieServiceImpl implements MovieService {
         }
     }
 
+    @Override
+    public List<MovieRetrievalDto> getMoviesBySearchCriteria(SearchDto searchDto, Integer pageNumber, Integer pageSize) {
+        MovieSpecificationBuilder movieSpecificationBuilder = new MovieSpecificationBuilder();
+        List<SearchCriteriaDto> criteriaList = searchDto.getSearchCriteriaList();
+        if (criteriaList != null){
+            criteriaList.forEach(criteria -> {
+                criteria.setDataOption(searchDto.getDataOption());
+                movieSpecificationBuilder.with(criteria);
+            });
+        }
+        Specification<MovieEntity> movieSpecification = movieSpecificationBuilder.build();
+        Pageable page = PageRequest.of(pageNumber, pageSize, Sort.by("year").descending());
+        Page<MovieEntity> moviePage = movieRepository.findAll(movieSpecification, page);
+        return moviePage.toList().stream().map(movieMapper::entityToRetrievalDto).collect(Collectors.toList());
+    }
+
+    @Override
+    public void addMovieToLoggedInUserWatchedMoviesById(Long movieId) {
+        Optional<MovieEntity> optionalMovieEntity = movieRepository.findById(movieId);
+        if (optionalMovieEntity.isEmpty()){
+            throw new NoSuchElementException("Movie with id: " + movieId  + " does not exist");
+        }
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        UserEntity userEntity = userService.getUserEntityById(userId);
+        MovieEntity movieEntity = optionalMovieEntity.get();
+        userEntity.getWatchedMovies().add(movieEntity);
+        movieRepository.save(movieEntity);
+    }
+
+    @Override
+    public void addMovieToLoggedInUserWatchlistById(Long movieId) {
+        Optional<MovieEntity> optionalMovieEntity = movieRepository.findById(movieId);
+        if (optionalMovieEntity.isEmpty()){
+            throw new NoSuchElementException("Movie with id: " + movieId  + " does not exist");
+        }
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        UserEntity userEntity = userService.getUserEntityById(userId);
+        MovieEntity movieEntity = optionalMovieEntity.get();
+        userEntity.getWatchlist().add(movieEntity);
+        movieRepository.save(movieEntity);
+    }
 }

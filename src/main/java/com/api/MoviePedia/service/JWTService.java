@@ -1,5 +1,6 @@
 package com.api.MoviePedia.service;
 
+import java.security.SignatureException;
 import java.util.Map;
 
 public interface JWTService {

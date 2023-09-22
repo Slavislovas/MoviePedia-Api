@@ -1,6 +1,8 @@
-package com.api.MoviePedia.model;
+package com.api.MoviePedia.model.movie;
 
 import com.api.MoviePedia.enumeration.Genre;
+import com.api.MoviePedia.model.actor.ActorRetrievalDto;
+import com.api.MoviePedia.model.director.DirectorRetrievalDto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

@@ -1,4 +1,4 @@
-package com.api.MoviePedia.model;
+package com.api.MoviePedia.model.movie;
 
 import com.api.MoviePedia.enumeration.DataOption;
 import lombok.AllArgsConstructor;

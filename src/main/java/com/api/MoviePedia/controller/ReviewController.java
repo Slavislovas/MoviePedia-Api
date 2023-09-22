@@ -1,10 +1,11 @@
 package com.api.MoviePedia.controller;
 
 import com.api.MoviePedia.exception.RequestBodyFieldValidationException;
-import com.api.MoviePedia.model.actor.ActorCreationDto;
-import com.api.MoviePedia.model.actor.ActorRetrievalDto;
 import com.api.MoviePedia.model.FieldValidationErrorModel;
-import com.api.MoviePedia.service.ActorService;
+import com.api.MoviePedia.model.review.LikeDislikeDto;
+import com.api.MoviePedia.model.review.ReviewCreationDto;
+import com.api.MoviePedia.model.review.ReviewRetrievalDto;
+import com.api.MoviePedia.service.ReviewService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -12,50 +13,44 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+@RequestMapping("/review")
 @RequiredArgsConstructor
-@RequestMapping("/actor")
 @RestController
-public class ActorController {
-    private final ActorService actorService;
-
-    @GetMapping("/get/all")
-    public ResponseEntity<List<ActorRetrievalDto>> getAllActors(){
-        return ResponseEntity.ok(actorService.getAllActors());
-    }
-
-    @GetMapping("/get/{id}")
-    public ResponseEntity<ActorRetrievalDto> getActorById(@PathVariable("id") Long actorId){
-        return new ResponseEntity<>(actorService.getActorById(actorId), HttpStatus.FOUND);
-    }
+public class ReviewController {
+    private final ReviewService reviewService;
 
     @PostMapping("/create")
-    public ResponseEntity<ActorRetrievalDto> createActor(@RequestBody @Valid ActorCreationDto actorCreationDto, BindingResult bindingResult) throws IOException {
+    public ResponseEntity<ReviewRetrievalDto> createMovieReview(@RequestBody @Valid ReviewCreationDto reviewCreationDto, BindingResult bindingResult){
         validateRequestBodyFields(bindingResult);
-        return new ResponseEntity<>(actorService.createActor(actorCreationDto), HttpStatus.CREATED);
+        return new ResponseEntity<ReviewRetrievalDto>(reviewService.writeMovieReview(reviewCreationDto), HttpStatus.CREATED);
     }
 
-    @PutMapping("/edit/{id}")
-    public ResponseEntity<ActorRetrievalDto> editActorById(@PathVariable("id") Long actorId, @RequestBody @Valid ActorCreationDto actorCreationDto,
-                                                           BindingResult bindingResult) throws IOException {
+    @PostMapping("/like")
+    public ResponseEntity<Void> likeMovieReview(@RequestBody @Valid LikeDislikeDto likeDislikeTo, BindingResult bindingResult){
         validateRequestBodyFields(bindingResult);
-        return ResponseEntity.ok(actorService.editActorById(actorId, actorCreationDto));
+        reviewService.likeMovieReview(likeDislikeTo);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/dislike")
+    public ResponseEntity<Void> dislikeMovieReview(@RequestBody @Valid LikeDislikeDto likeDislikeDto, BindingResult bindingResult){
+        validateRequestBodyFields(bindingResult);
+        reviewService.dislikeMovieReview(likeDislikeDto);
+        return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<Void> deleteActorById(@PathVariable("id") Long actorId){
-        actorService.deleteActorById(actorId);
+    public ResponseEntity<Void> deleteMovieReviewById(@PathVariable("id") Long reviewId){
+        reviewService.deleteMovieReviewById(reviewId);
         return ResponseEntity.ok().build();
     }
 

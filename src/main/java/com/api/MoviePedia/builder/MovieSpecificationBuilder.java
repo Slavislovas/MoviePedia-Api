@@ -2,7 +2,7 @@ package com.api.MoviePedia.builder;
 
 import com.api.MoviePedia.enumeration.DataOption;
 import com.api.MoviePedia.enumeration.SearchOperation;
-import com.api.MoviePedia.model.SearchCriteriaDto;
+import com.api.MoviePedia.model.movie.SearchCriteriaDto;
 import com.api.MoviePedia.repository.model.MovieEntity;
 import com.api.MoviePedia.specification.MovieSpecification;
 import org.springframework.data.jpa.domain.Specification;

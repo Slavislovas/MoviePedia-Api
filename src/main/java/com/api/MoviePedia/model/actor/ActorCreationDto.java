@@ -1,4 +1,4 @@
-package com.api.MoviePedia.model;
+package com.api.MoviePedia.model.actor;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotBlank;
@@ -14,7 +14,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class DirectorCreationDto {
+public class ActorCreationDto {
     @NotNull
     @NotBlank
     private String name;

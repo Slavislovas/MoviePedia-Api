@@ -74,6 +74,9 @@ public class MovieEntity {
     private Set<ActorEntity> actors;
 
     @OneToMany(mappedBy = "movie", cascade = CascadeType.REMOVE)
+    private Set<RatingEntity> ratings;
+
+    @OneToMany(mappedBy = "movie", cascade = CascadeType.REMOVE)
     private Set<ReviewEntity> reviews;
 
     @ManyToMany(mappedBy = "watchlist")

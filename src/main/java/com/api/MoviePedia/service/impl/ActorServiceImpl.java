@@ -1,8 +1,8 @@
 package com.api.MoviePedia.service.impl;
 
 import com.api.MoviePedia.exception.DuplicateDatabaseEntryException;
-import com.api.MoviePedia.model.ActorCreationDto;
-import com.api.MoviePedia.model.ActorRetrievalDto;
+import com.api.MoviePedia.model.actor.ActorCreationDto;
+import com.api.MoviePedia.model.actor.ActorRetrievalDto;
 import com.api.MoviePedia.repository.ActorRepository;
 import com.api.MoviePedia.repository.model.ActorEntity;
 import com.api.MoviePedia.repository.model.MovieEntity;

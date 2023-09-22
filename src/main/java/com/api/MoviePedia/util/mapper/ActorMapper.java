@@ -1,7 +1,7 @@
 package com.api.MoviePedia.util.mapper;
 
-import com.api.MoviePedia.model.ActorCreationDto;
-import com.api.MoviePedia.model.ActorRetrievalDto;
+import com.api.MoviePedia.model.actor.ActorCreationDto;
+import com.api.MoviePedia.model.actor.ActorRetrievalDto;
 import com.api.MoviePedia.repository.model.ActorEntity;
 import com.api.MoviePedia.repository.model.MovieEntity;
 import com.api.MoviePedia.service.FileStorageService;

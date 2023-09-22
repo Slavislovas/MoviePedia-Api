@@ -2,9 +2,10 @@ package com.api.MoviePedia.controller;
 
 import com.api.MoviePedia.exception.RequestBodyFieldValidationException;
 import com.api.MoviePedia.model.FieldValidationErrorModel;
-import com.api.MoviePedia.model.MovieCreationDto;
-import com.api.MoviePedia.model.MovieRetrievalDto;
-import com.api.MoviePedia.model.SearchDto;
+import com.api.MoviePedia.model.movie.MovieCreationDto;
+import com.api.MoviePedia.model.movie.MovieRetrievalDto;
+import com.api.MoviePedia.model.movie.RatingCreationDto;
+import com.api.MoviePedia.model.movie.SearchDto;
 import com.api.MoviePedia.service.MovieService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -75,6 +76,13 @@ public class MovieController {
     @PostMapping("/add/{movieId}/watchlist/{userId}")
     public ResponseEntity<Void> addMovieToWatchlist(@PathVariable("movieId") Long movieId, @PathVariable("userId") Long userId){
         movieService.addMovieToWatchlist(movieId, userId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/rate")
+    public ResponseEntity<Void> rateMovieById( @RequestBody @Valid RatingCreationDto ratingCreationDto, BindingResult bindingResult){
+        validateRequestBodyFields(bindingResult);
+        movieService.rateMovieById(ratingCreationDto);
         return ResponseEntity.ok().build();
     }
 

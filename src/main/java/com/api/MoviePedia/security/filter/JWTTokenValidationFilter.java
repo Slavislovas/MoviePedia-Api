@@ -1,6 +1,10 @@
 package com.api.MoviePedia.security.filter;
 
 import com.api.MoviePedia.service.JWTService;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.UnsupportedJwtException;
+import io.jsonwebtoken.security.SignatureException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -31,10 +35,9 @@ public class JWTTokenValidationFilter extends OncePerRequestFilter {
             String role = (String) claims.get("role");
             Authentication authentication = new UsernamePasswordAuthenticationToken(id, null, AuthorityUtils.commaSeparatedStringToAuthorityList(role));
             SecurityContextHolder.getContext().setAuthentication(authentication);
-            filterChain.doFilter(request, response);
-        } catch (Exception exception){
+        } catch (ExpiredJwtException | MalformedJwtException | UnsupportedJwtException | SignatureException | IllegalStateException | NullPointerException exception){
             SecurityContextHolder.clearContext();
-            filterChain.doFilter(request, response);
         }
+        filterChain.doFilter(request, response);
     }
 }

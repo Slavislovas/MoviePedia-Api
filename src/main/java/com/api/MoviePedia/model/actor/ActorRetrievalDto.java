@@ -1,4 +1,4 @@
-package com.api.MoviePedia.model;
+package com.api.MoviePedia.model.actor;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -9,7 +9,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class DirectorRetrievalDto {
+public class ActorRetrievalDto {
     private Long id;
     private String name;
     private String surname;

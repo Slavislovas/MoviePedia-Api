@@ -1,7 +1,7 @@
 package com.api.MoviePedia.service;
 
-import com.api.MoviePedia.model.DirectorCreationDto;
-import com.api.MoviePedia.model.DirectorRetrievalDto;
+import com.api.MoviePedia.model.director.DirectorCreationDto;
+import com.api.MoviePedia.model.director.DirectorRetrievalDto;
 import com.api.MoviePedia.repository.model.DirectorEntity;
 
 import java.io.IOException;

@@ -1,8 +1,10 @@
 package com.api.MoviePedia.service;
 
-import com.api.MoviePedia.model.MovieCreationDto;
-import com.api.MoviePedia.model.MovieRetrievalDto;
-import com.api.MoviePedia.model.SearchDto;
+import com.api.MoviePedia.model.movie.MovieCreationDto;
+import com.api.MoviePedia.model.movie.MovieRetrievalDto;
+import com.api.MoviePedia.model.movie.RatingCreationDto;
+import com.api.MoviePedia.model.movie.SearchDto;
+import com.api.MoviePedia.repository.model.MovieEntity;
 
 import java.io.IOException;
 import java.util.List;
@@ -32,4 +34,10 @@ public interface MovieService {
     Set<MovieRetrievalDto> getWatchedMoviesByUserId(Long userId);
 
     Set<MovieRetrievalDto> getWatchlistByUserId(Long userId);
+
+    void rateMovieById(RatingCreationDto ratingCreationDto);
+
+    Integer getRatingByUserIdAndMovieId(Long userId, Long movieId);
+
+    MovieEntity getMovieEntityById(Long movieId);
 }

@@ -2,8 +2,8 @@ package com.api.MoviePedia.service.impl;
 
 import com.api.MoviePedia.exception.DuplicateDatabaseEntryException;
 import com.api.MoviePedia.exception.ForeignKeyConstraintViolationException;
-import com.api.MoviePedia.model.DirectorCreationDto;
-import com.api.MoviePedia.model.DirectorRetrievalDto;
+import com.api.MoviePedia.model.director.DirectorCreationDto;
+import com.api.MoviePedia.model.director.DirectorRetrievalDto;
 import com.api.MoviePedia.repository.DirectorRepository;
 import com.api.MoviePedia.repository.model.DirectorEntity;
 import com.api.MoviePedia.repository.model.MovieEntity;

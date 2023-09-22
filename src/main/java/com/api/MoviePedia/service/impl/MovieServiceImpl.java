@@ -2,14 +2,18 @@ package com.api.MoviePedia.service.impl;
 
 import com.api.MoviePedia.builder.MovieSpecificationBuilder;
 import com.api.MoviePedia.enumeration.Role;
-import com.api.MoviePedia.model.MovieCreationDto;
-import com.api.MoviePedia.model.MovieRetrievalDto;
-import com.api.MoviePedia.model.SearchCriteriaDto;
-import com.api.MoviePedia.model.SearchDto;
+import com.api.MoviePedia.exception.DuplicateDatabaseEntryException;
+import com.api.MoviePedia.model.movie.MovieCreationDto;
+import com.api.MoviePedia.model.movie.MovieRetrievalDto;
+import com.api.MoviePedia.model.movie.RatingCreationDto;
+import com.api.MoviePedia.model.movie.SearchCriteriaDto;
+import com.api.MoviePedia.model.movie.SearchDto;
 import com.api.MoviePedia.repository.MovieRepository;
+import com.api.MoviePedia.repository.RatingRepository;
 import com.api.MoviePedia.repository.model.ActorEntity;
 import com.api.MoviePedia.repository.model.DirectorEntity;
 import com.api.MoviePedia.repository.model.MovieEntity;
+import com.api.MoviePedia.repository.model.RatingEntity;
 import com.api.MoviePedia.repository.model.UserEntity;
 import com.api.MoviePedia.service.ActorService;
 import com.api.MoviePedia.service.DirectorService;
@@ -42,6 +46,7 @@ import java.util.stream.Collectors;
 @Service
 public class MovieServiceImpl implements MovieService {
     private final MovieRepository movieRepository;
+    private final RatingRepository ratingRepository;
     private final MovieMapper movieMapper;
     private final FileStorageService fileStorageService;
     private final DirectorService directorService;
@@ -60,6 +65,15 @@ public class MovieServiceImpl implements MovieService {
             throw new NoSuchElementException("Movie with id: " + movieId  + " does not exist");
         }
         return movieMapper.entityToRetrievalDto(optionalMovieEntity.get());
+    }
+
+    @Override
+    public MovieEntity getMovieEntityById(Long movieId) {
+        Optional<MovieEntity> optionalMovieEntity = movieRepository.findById(movieId);
+        if (optionalMovieEntity.isEmpty()){
+            throw new NoSuchElementException("Movie with id: " + movieId  + " does not exist");
+        }
+        return optionalMovieEntity.get();
     }
 
     @Override
@@ -218,6 +232,50 @@ public class MovieServiceImpl implements MovieService {
         validateUserPermissions(userId, "Users can only view their own watchlist");
         UserEntity userEntity = userService.getUserEntityById(userId);
         return userEntity.getWatchlist().stream().map(movieMapper::entityToRetrievalDto).collect(Collectors.toSet());
+    }
+
+    @Override
+    public void rateMovieById(RatingCreationDto ratingCreationDto) {
+        validateUserPermissions(ratingCreationDto.getUserId(), "Users cannot rate movies for other users");
+        Optional<MovieEntity> optionalMovieEntity = movieRepository.findById(ratingCreationDto.getMovieId());
+        if (optionalMovieEntity.isEmpty()){
+            throw new NoSuchElementException("Movie with id: " + ratingCreationDto.getMovieId()  + " does not exist");
+        }
+        MovieEntity movieEntity = optionalMovieEntity.get();
+        if(checkIfUserAlreadyRatedMovie(ratingCreationDto.getUserId(), movieEntity)){
+            throw new DuplicateDatabaseEntryException("User with id: " + ratingCreationDto.getUserId() + " has already rated this movie");
+        }
+        movieEntity.rateMovie(ratingCreationDto.getRating());
+        UserEntity userEntity = userService.getUserEntityById(ratingCreationDto.getUserId());
+        RatingEntity ratingEntity = new RatingEntity(null, ratingCreationDto.getRating(), userEntity, movieEntity);
+        movieRepository.save(movieEntity);
+        ratingRepository.save(ratingEntity);
+
+    }
+
+    @Override
+    public Integer getRatingByUserIdAndMovieId(Long userId, Long movieId) {
+        validateUserPermissions(userId, "Users can only retrieve their own rating for the movie");
+        Optional<MovieEntity> optionalMovieEntity = movieRepository.findById(movieId);
+        if (optionalMovieEntity.isEmpty()){
+            throw new NoSuchElementException("Movie with id: " + movieId  + " does not exist");
+        }
+        MovieEntity movieEntity = optionalMovieEntity.get();
+        for (RatingEntity rating : movieEntity.getRatings()) {
+            if (rating.getUser().getId().equals(userId)){
+                return rating.getRating();
+            }
+        }
+        throw new NoSuchElementException("User with id: " + userId + " has not rated this movie");
+    }
+
+    private Boolean checkIfUserAlreadyRatedMovie(Long userId, MovieEntity movieEntity) {
+        for (RatingEntity ratingEntity : movieEntity.getRatings()) {
+            if (ratingEntity.getUser().getId().equals(userId)){
+                return true;
+            }
+        }
+        return false;
     }
 
     private void validateUserPermissions(Long userId, String errorMessage) {

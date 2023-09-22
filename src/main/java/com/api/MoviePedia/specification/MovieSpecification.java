@@ -1,7 +1,7 @@
 package com.api.MoviePedia.specification;
 
 import com.api.MoviePedia.enumeration.Genre;
-import com.api.MoviePedia.model.SearchCriteriaDto;
+import com.api.MoviePedia.model.movie.SearchCriteriaDto;
 import com.api.MoviePedia.repository.model.ActorEntity;
 import com.api.MoviePedia.repository.model.DirectorEntity;
 import com.api.MoviePedia.repository.model.MovieEntity;

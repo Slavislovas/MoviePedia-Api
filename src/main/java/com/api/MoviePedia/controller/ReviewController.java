@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @RequestMapping("/review")
 @RequiredArgsConstructor
@@ -28,6 +30,10 @@ import java.util.List;
 public class ReviewController {
     private final ReviewService reviewService;
 
+    @GetMapping("/get/{id}")
+    public ResponseEntity<Set<ReviewRetrievalDto>> getAllReviewsByMovieId(@PathVariable("id") Long movieId){
+        return ResponseEntity.ok(reviewService.getAllReviewsByMovieId(movieId));
+    }
     @PostMapping("/create")
     public ResponseEntity<ReviewRetrievalDto> createMovieReview(@RequestBody @Valid ReviewCreationDto reviewCreationDto, BindingResult bindingResult){
         validateRequestBodyFields(bindingResult);

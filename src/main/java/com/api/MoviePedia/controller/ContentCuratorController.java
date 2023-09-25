@@ -2,10 +2,10 @@ package com.api.MoviePedia.controller;
 
 import com.api.MoviePedia.exception.RequestBodyFieldValidationException;
 import com.api.MoviePedia.model.FieldValidationErrorModel;
-import com.api.MoviePedia.model.UserCreationDto;
-import com.api.MoviePedia.model.UserEditDto;
-import com.api.MoviePedia.model.UserRetrievalDto;
-import com.api.MoviePedia.service.UserService;
+import com.api.MoviePedia.model.contentcurator.ContentCuratorCreationDto;
+import com.api.MoviePedia.model.contentcurator.ContentCuratorEditDto;
+import com.api.MoviePedia.model.contentcurator.ContentCuratorRetrievalDto;
+import com.api.MoviePedia.service.ContentCuratorService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -24,36 +24,38 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.ArrayList;
 import java.util.List;
 
-@RequestMapping("/user")
+@RequestMapping("/content_curator")
 @RequiredArgsConstructor
 @RestController
-public class UserController {
-    private final UserService userService;
+public class ContentCuratorController {
+    private final ContentCuratorService contentCuratorService;
 
     @GetMapping("/get/all")
-    public ResponseEntity<List<UserRetrievalDto>> getAllUsers(){
-        return ResponseEntity.ok(userService.getAllUsers());
-    }
-    @GetMapping("/get/{id}")
-    public ResponseEntity<UserRetrievalDto> getUserById(@PathVariable("id") Long userId){
-        return new ResponseEntity<>(userService.getUserById(userId), HttpStatus.FOUND);
+    public ResponseEntity<List<ContentCuratorRetrievalDto>> getAllContentCurators(){
+        return ResponseEntity.ok(contentCuratorService.getAllContentCurators());
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<UserRetrievalDto> registerUser(@RequestBody @Valid UserCreationDto creationDto, BindingResult bindingResult){
+    @GetMapping("/get/{id}")
+    public ResponseEntity<ContentCuratorRetrievalDto> getContentCuratorById(@PathVariable("id") Long contentCuratorId){
+        return new ResponseEntity<>(contentCuratorService.getContentCuratorById(contentCuratorId), HttpStatus.FOUND);
+    }
+
+    @PostMapping("/create")
+    public ResponseEntity<ContentCuratorRetrievalDto> createContentCurator(@RequestBody @Valid ContentCuratorCreationDto creationDto, BindingResult bindingResult){
         validateRequestBodyFields(bindingResult);
-        return new ResponseEntity<>(userService.registerUser(creationDto), HttpStatus.CREATED);
+        return new ResponseEntity<>(contentCuratorService.createContentCurator(creationDto), HttpStatus.CREATED);
     }
 
     @PutMapping("/edit/{id}")
-    public ResponseEntity<UserRetrievalDto> editUserById(@PathVariable("id") Long userId, @RequestBody @Valid UserEditDto editDto, BindingResult bindingResult){
+    public ResponseEntity<ContentCuratorRetrievalDto> editContentCuratorById(@PathVariable("id") Long contentCuratorId,
+                                                                             @RequestBody @Valid ContentCuratorEditDto editDto, BindingResult bindingResult){
         validateRequestBodyFields(bindingResult);
-        return ResponseEntity.ok(userService.editUserById(editDto, userId));
+        return ResponseEntity.ok(contentCuratorService.editContentCuratorById(contentCuratorId, editDto));
     }
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<Void> deleteUserById(@PathVariable("id") Long userId){
-        userService.deleteUserById(userId);
+    public ResponseEntity<Void> deleteContentCuratorById(@PathVariable("id") Long contentCuratorId){
+        contentCuratorService.deleteContentCuratorById(contentCuratorId);
         return ResponseEntity.ok().build();
     }
 

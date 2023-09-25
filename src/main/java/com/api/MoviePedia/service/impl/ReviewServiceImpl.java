@@ -23,9 +23,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -36,6 +39,13 @@ public class ReviewServiceImpl implements ReviewService {
     private final ReviewMapper reviewMapper;
     private final UserService userService;
     private final MovieService movieService;
+
+    @Override
+    public Set<ReviewRetrievalDto> getAllReviewsByMovieId(Long movieId) {
+       MovieEntity movieEntity = movieService.getMovieEntityById(movieId);
+        return movieEntity.getReviews().stream()
+                .map(reviewEntity -> reviewMapper.entityToRetrievalDto(reviewEntity, reviewEntity.getLikes().size(), reviewEntity.getDislikes().size())).collect(Collectors.toSet());
+    }
 
     @Override
     public ReviewRetrievalDto writeMovieReview(ReviewCreationDto reviewCreationDto) {

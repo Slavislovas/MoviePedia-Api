@@ -7,6 +7,7 @@ import com.api.MoviePedia.model.UserEditDto;
 import com.api.MoviePedia.model.UserRetrievalDto;
 import com.api.MoviePedia.repository.UserRepository;
 import com.api.MoviePedia.repository.model.UserEntity;
+import com.api.MoviePedia.service.AuthenticationService;
 import com.api.MoviePedia.service.UserService;
 import com.api.MoviePedia.util.mapper.UserMapper;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +16,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
@@ -26,19 +28,19 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
+    private final AuthenticationService authenticationService;
     @Override
     public UserRetrievalDto registerUser(UserCreationDto creationDto) {
-        Optional<UserEntity> optionalUserEntityByUsername = userRepository.findByUsername(creationDto.getUsername());
-        if (optionalUserEntityByUsername.isPresent()){
-            throw new DuplicateDatabaseEntryException("Username: " + creationDto.getUsername() + " is already taken");
-        }
-        Optional<UserEntity> optionalUserEntityByEmail = userRepository.findByEmail(creationDto.getEmail());
-        if (optionalUserEntityByEmail.isPresent()){
-            throw new DuplicateDatabaseEntryException("Email: " + creationDto.getEmail() + " is already taken");
-        }
+        authenticationService.checkIfUsernameIsAvailable(creationDto.getUsername());
+        authenticationService.checkIfEmailIsAvailable(creationDto.getEmail());
         creationDto.setPassword(bCryptPasswordEncoder.encode(creationDto.getPassword()));
         UserEntity userEntity = userMapper.creationDtoToEntity(creationDto, null, Role.ROLE_USER, new HashSet<>(), new HashSet<>(), new HashSet<>());
         return userMapper.entityToRetrievalDto(userRepository.save(userEntity));
+    }
+
+    @Override
+    public List<UserRetrievalDto> getAllUsers() {
+        return userRepository.findAll().stream().map(userMapper::entityToRetrievalDto).collect(Collectors.toList());
     }
 
     @Override
@@ -85,8 +87,17 @@ public class UserServiceImpl implements UserService {
     public UserEntity getUserEntityById(Long id) {
         Optional<UserEntity> optionalUserEntity = userRepository.findById(id);
         if (optionalUserEntity.isEmpty()){
-            throw new NoSuchElementException("User with username: " + id + " does not exist");
+            throw new NoSuchElementException("User with id: " + id + " does not exist");
         }
         return optionalUserEntity.get();
+    }
+
+    @Override
+    public void deleteUserById(Long userId) {
+        Optional<UserEntity> optionalUserEntity = userRepository.findById(userId);
+        if (optionalUserEntity.isEmpty()){
+            throw new NoSuchElementException("User with id: " + userId + " does not exist");
+        }
+        userRepository.deleteById(userId);
     }
 }

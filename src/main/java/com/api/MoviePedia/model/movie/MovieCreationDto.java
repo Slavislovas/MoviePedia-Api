@@ -33,11 +33,4 @@ public class MovieCreationDto {
     private byte[] picture;
 
     private String trailerYoutubeUrl;
-
-    @NotNull
-    private Long directorId;
-
-    @NotEmpty
-    @NotNull
-    private Set<Long> actorIds;
 }

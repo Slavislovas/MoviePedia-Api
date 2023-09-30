@@ -44,6 +44,20 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public UserRetrievalDto createContentCurator(UserCreationDto creationDto) {
+        authenticationService.checkIfUsernameIsAvailable(creationDto.getUsername());
+        authenticationService.checkIfEmailIsAvailable(creationDto.getEmail());
+        creationDto.setPassword(bCryptPasswordEncoder.encode(creationDto.getPassword()));
+        UserEntity userEntity = userMapper.creationDtoToEntity(creationDto, null, Role.ROLE_CONTENT_CURATOR, new HashSet<>(), new HashSet<>(), new HashSet<>());
+        return userMapper.entityToRetrievalDto(userRepository.save(userEntity));
+    }
+
+    @Override
+    public List<UserRetrievalDto> getAllContentCurators() {
+        return userRepository.findAllByRole(Role.ROLE_CONTENT_CURATOR).stream().map(userMapper::entityToRetrievalDto).collect(Collectors.toList());
+    }
+
+    @Override
     public UserRetrievalDto getUserById(Long userId) {
         Role role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream().map(x -> Role.valueOf(x.getAuthority())).toList().get(0);
         if (role == Role.ROLE_USER ){

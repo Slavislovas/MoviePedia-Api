@@ -9,4 +9,6 @@ import java.util.Optional;
 @Repository
 public interface ReviewRepository extends JpaRepository<ReviewEntity, Long> {
     Optional<ReviewEntity> findByReviewerId(Long reviewerId);
+
+    Optional<ReviewEntity> findByReviewerIdAndMovieId(Long userId, Long id);
 }

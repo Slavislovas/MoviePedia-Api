@@ -24,34 +24,46 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.ArrayList;
 import java.util.List;
 
-@RequestMapping("/user")
+@RequestMapping("/api/v1")
 @RequiredArgsConstructor
 @RestController
 public class UserController {
     private final UserService userService;
 
-    @GetMapping("/get/all")
+    @GetMapping("/users")
     public ResponseEntity<List<UserRetrievalDto>> getAllUsers(){
         return ResponseEntity.ok(userService.getAllUsers());
     }
-    @GetMapping("/get/{id}")
-    public ResponseEntity<UserRetrievalDto> getUserById(@PathVariable("id") Long userId){
-        return new ResponseEntity<>(userService.getUserById(userId), HttpStatus.FOUND);
+
+    @GetMapping("/content_curators")
+    public ResponseEntity<List<UserRetrievalDto>> getAllContentCurators(){
+        return ResponseEntity.ok(userService.getAllContentCurators());
     }
 
-    @PostMapping("/register")
+    @GetMapping("/users/{id}")
+    public ResponseEntity<UserRetrievalDto> getUserById(@PathVariable("id") Long userId){
+        return ResponseEntity.ok(userService.getUserById(userId));
+    }
+
+    @PostMapping("/users")
     public ResponseEntity<UserRetrievalDto> registerUser(@RequestBody @Valid UserCreationDto creationDto, BindingResult bindingResult){
         validateRequestBodyFields(bindingResult);
         return new ResponseEntity<>(userService.registerUser(creationDto), HttpStatus.CREATED);
     }
 
-    @PutMapping("/edit/{id}")
+    @PostMapping("/content_curators")
+    public ResponseEntity<UserRetrievalDto> createContentCurator(@RequestBody @Valid UserCreationDto creationDto, BindingResult bindingResult){
+        validateRequestBodyFields(bindingResult);
+        return new ResponseEntity<>(userService.createContentCurator(creationDto), HttpStatus.CREATED);
+    }
+
+    @PutMapping("/users/{id}")
     public ResponseEntity<UserRetrievalDto> editUserById(@PathVariable("id") Long userId, @RequestBody @Valid UserEditDto editDto, BindingResult bindingResult){
         validateRequestBodyFields(bindingResult);
         return ResponseEntity.ok(userService.editUserById(editDto, userId));
     }
 
-    @DeleteMapping("/delete/{id}")
+    @DeleteMapping("/users/{id}")
     public ResponseEntity<Void> deleteUserById(@PathVariable("id") Long userId){
         userService.deleteUserById(userId);
         return ResponseEntity.ok().build();

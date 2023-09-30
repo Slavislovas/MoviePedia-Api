@@ -13,31 +13,33 @@ import java.util.Set;
 public interface MovieService {
     List<MovieRetrievalDto> getAllMovies();
 
-    MovieRetrievalDto getMovieById(Long movieId);
+    MovieRetrievalDto getMovieById(Long directorId, Long movieId);
 
-    MovieRetrievalDto createMovie(MovieCreationDto movieCreationDto) throws IOException;
+    MovieRetrievalDto createMovie(Long directorId, MovieCreationDto movieCreationDto) throws IOException;
 
-    MovieRetrievalDto editMovieById(Long movieId, MovieCreationDto movieCreationDto) throws IOException;
+    MovieRetrievalDto editMovieById(Long movieId, Long directorId, MovieCreationDto movieCreationDto) throws IOException;
 
-    void deleteMovieById(Long movieId);
+    void deleteMovieById(Long directorId, Long movieId);
 
     List<MovieRetrievalDto> getMoviesBySearchCriteria(SearchDto searchDto, Integer pageNumber, Integer pageSize);
 
-    void addMovieToWatchedMovies(Long movieId, Long userId);
+    void addMovieToWatchedMovies(Long directorId, Long movieId);
 
-    void addMovieToWatchlist(Long movieId, Long userId);
+    void addMovieToWatchlist(Long directorId, Long movieId);
 
-    void deleteMovieFromWatchedMovies(Long movieId, Long userId);
+    void deleteMovieFromWatchedMovies(Long directorId, Long movieId);
 
-    void deleteMovieFromWatchlist(Long movieId, Long userId);
+    void deleteMovieFromWatchlist(Long directorId, Long movieId);
 
-    Set<MovieRetrievalDto> getWatchedMoviesByUserId(Long userId);
+    Set<MovieRetrievalDto> getWatchedMoviesByUserId();
 
-    Set<MovieRetrievalDto> getWatchlistByUserId(Long userId);
+    Set<MovieRetrievalDto> getWatchlistByUserId();
 
-    void rateMovieById(RatingCreationDto ratingCreationDto);
+    void rateMovieById(Long directorId, Long movieId, Integer rating);
 
     Integer getRatingByUserIdAndMovieId(Long userId, Long movieId);
 
     MovieEntity getMovieEntityById(Long movieId);
+
+    Set<MovieRetrievalDto> getAllMoviesByDirectorId(Long directorId);
 }

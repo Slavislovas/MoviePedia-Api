@@ -24,7 +24,7 @@ import java.util.NoSuchElementException;
 public class RestControllerExceptionHandler {
     @ExceptionHandler(RequestBodyFieldValidationException.class)
     public ResponseEntity<List<FieldValidationErrorModel>> handleRequestBodyFieldValidationException(RequestBodyFieldValidationException exception){
-        return new ResponseEntity<>(exception.getFieldValidationErrors(), HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(exception.getFieldValidationErrors(), HttpStatus.UNPROCESSABLE_ENTITY);
     }
 
     @ExceptionHandler(DuplicateDatabaseEntryException.class)

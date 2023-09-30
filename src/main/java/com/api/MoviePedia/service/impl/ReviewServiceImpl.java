@@ -2,18 +2,18 @@ package com.api.MoviePedia.service.impl;
 
 import com.api.MoviePedia.enumeration.Role;
 import com.api.MoviePedia.exception.DuplicateDatabaseEntryException;
-import com.api.MoviePedia.model.review.LikeDislikeDto;
 import com.api.MoviePedia.model.review.ReviewCreationDto;
 import com.api.MoviePedia.model.review.ReviewRetrievalDto;
 import com.api.MoviePedia.repository.DislikeRepository;
 import com.api.MoviePedia.repository.LikeRepository;
 import com.api.MoviePedia.repository.ReviewRepository;
+import com.api.MoviePedia.repository.model.DirectorEntity;
 import com.api.MoviePedia.repository.model.DislikeEntity;
 import com.api.MoviePedia.repository.model.LikeEntity;
 import com.api.MoviePedia.repository.model.MovieEntity;
 import com.api.MoviePedia.repository.model.ReviewEntity;
 import com.api.MoviePedia.repository.model.UserEntity;
-import com.api.MoviePedia.service.MovieService;
+import com.api.MoviePedia.service.DirectorService;
 import com.api.MoviePedia.service.ReviewService;
 import com.api.MoviePedia.service.UserService;
 import com.api.MoviePedia.util.mapper.ReviewMapper;
@@ -23,7 +23,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
@@ -38,57 +37,120 @@ public class ReviewServiceImpl implements ReviewService {
     private final DislikeRepository dislikeRepository;
     private final ReviewMapper reviewMapper;
     private final UserService userService;
-    private final MovieService movieService;
+    private final DirectorService directorService;
 
     @Override
-    public Set<ReviewRetrievalDto> getAllReviewsByMovieId(Long movieId) {
-       MovieEntity movieEntity = movieService.getMovieEntityById(movieId);
-        return movieEntity.getReviews().stream()
+    public Set<ReviewRetrievalDto> getAllReviewsByDirectorIdAndMovieId(Long directorId, Long movieId) {
+        DirectorEntity directorEntity = directorService.getDirectorEntityById(directorId);
+        Set<ReviewEntity> reviewEntities = directorEntity
+                .getMovies()
+                .stream()
+                .filter(movieEntity -> movieEntity.getId().equals(movieId))
+                .findFirst()
+                .orElseThrow(() -> new NoSuchElementException("Director has not made a movie with id: " + movieId))
+                .getReviews();
+        return reviewEntities.stream()
                 .map(reviewEntity -> reviewMapper.entityToRetrievalDto(reviewEntity, reviewEntity.getLikes().size(), reviewEntity.getDislikes().size())).collect(Collectors.toSet());
     }
 
     @Override
-    public ReviewRetrievalDto writeMovieReview(ReviewCreationDto reviewCreationDto) {
-        validateUserPermissions(reviewCreationDto.getReviewerId(), "Users cannot write reviews for other users");
-        Optional<ReviewEntity> optionalReviewEntity = reviewRepository.findByReviewerId(reviewCreationDto.getReviewerId());
-        if (optionalReviewEntity.isPresent()){
-            throw new DuplicateDatabaseEntryException("User with id: " + reviewCreationDto.getReviewerId() + " has already written a review for this movie");
-        }
-        MovieEntity movieEntity = movieService.getMovieEntityById(reviewCreationDto.getMovieId());
-        UserEntity userEntity = userService.getUserEntityById(reviewCreationDto.getReviewerId());
-        ReviewEntity reviewEntity = reviewMapper.creationDtoToEntity(reviewCreationDto, null, new HashSet<>(), new HashSet<>(),userEntity, movieEntity);
+    public ReviewRetrievalDto getReviewById(Long directorId, Long movieId, Long reviewId) {
+        DirectorEntity directorEntity = directorService.getDirectorEntityById(directorId);
+        ReviewEntity reviewEntity = directorEntity
+                .getMovies()
+                .stream()
+                .filter(movieEntity -> movieEntity.getId().equals(movieId))
+                .findFirst()
+                .orElseThrow(() -> new NoSuchElementException("Director has not made a movie with id: " + movieId))
+                .getReviews()
+                .stream()
+                .filter(review -> review.getId().equals(reviewId))
+                .findFirst()
+                .orElseThrow(() -> new NoSuchElementException("Review with id: " + reviewId + " does not exist"));
+        return reviewMapper.entityToRetrievalDto(reviewEntity, reviewEntity.getLikes().size(), reviewEntity.getDislikes().size());
+    }
+
+    @Override
+    public ReviewRetrievalDto editReviewById(Long reviewId, Long movieId, Long directorId, ReviewCreationDto creationDto) {
+        DirectorEntity directorEntity = directorService.getDirectorEntityById(directorId);
+        ReviewEntity reviewEntity = directorEntity
+                .getMovies()
+                .stream()
+                .filter(movieEntity -> movieEntity.getId().equals(movieId))
+                .findFirst()
+                .orElseThrow(() -> new NoSuchElementException("Director has not made a movie with id: " + movieId))
+                .getReviews()
+                .stream()
+                .filter(review -> review.getId().equals(reviewId))
+                .findFirst()
+                .orElseThrow(() -> new NoSuchElementException("Review with id: " + reviewId + " does not exist"));
+        validateUserPermissions(reviewEntity.getReviewer().getId(), "Users can only edit their own reviews");
+        reviewEntity = reviewMapper.creationDtoToEntity(creationDto, reviewEntity.getId(), reviewEntity.getLikes(), reviewEntity.getDislikes(), reviewEntity.getReviewer(), reviewEntity.getMovie());
         return reviewMapper.entityToRetrievalDto(reviewRepository.save(reviewEntity), reviewEntity.getLikes().size(), reviewEntity.getDislikes().size());
     }
 
     @Override
-    public void deleteMovieReviewById(Long reviewId) {
-        Optional<ReviewEntity> optionalReviewEntity = reviewRepository.findById(reviewId);
-        if (optionalReviewEntity.isEmpty()){
-            throw new NoSuchElementException("Review with id: " + reviewId + " does not exist");
+    public ReviewRetrievalDto writeMovieReview(Long directorId, Long movieId, ReviewCreationDto reviewCreationDto) {
+        DirectorEntity directorEntity = directorService.getDirectorEntityById(directorId);
+        MovieEntity movieEntity = directorEntity
+                .getMovies()
+                .stream()
+                .filter(filteredMovieEntity -> filteredMovieEntity.getId().equals(movieId))
+                .findFirst()
+                .orElseThrow(() -> new NoSuchElementException("Director has not made a movie with id: " + movieId));
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        UserEntity userEntity = userService.getUserEntityById(userId);
+        if (reviewRepository.findByReviewerIdAndMovieId(userId, movieEntity.getId()).isPresent()) {
+            throw new DuplicateDatabaseEntryException("You have already reviewed this movie");
         }
-        validateUserPermissions(optionalReviewEntity.get().getReviewer().getId(), "Users can only delete their own reviews");
+        ReviewEntity reviewEntity = reviewMapper.creationDtoToEntity(reviewCreationDto, null, new HashSet<>(), new HashSet<>(), userEntity, movieEntity);
+        return reviewMapper.entityToRetrievalDto(reviewRepository.save(reviewEntity), reviewEntity.getLikes().size(), reviewEntity.getDislikes().size());
+    }
+
+    @Override
+    public void deleteMovieReviewById(Long directorId, Long movieId, Long reviewId) {
+        DirectorEntity directorEntity = directorService.getDirectorEntityById(directorId);
+        ReviewEntity reviewEntity = directorEntity
+                .getMovies()
+                .stream()
+                .filter(movieEntity -> movieEntity.getId().equals(movieId))
+                .findFirst()
+                .orElseThrow(() -> new NoSuchElementException("Director has not made a movie with id: " + movieId))
+                .getReviews()
+                .stream()
+                .filter(review -> review.getId().equals(reviewId))
+                .findFirst()
+                .orElseThrow(() -> new NoSuchElementException("Review with id: " + reviewId + " does not exist"));
+        validateUserPermissions(reviewEntity.getReviewer().getId(), "Users can only delete their own reviews");
         reviewRepository.deleteById(reviewId);
     }
 
     @Transactional
     @Override
-    public void likeMovieReview(LikeDislikeDto likeDislikeDto){
-        Optional<ReviewEntity> optionalReviewEntity = reviewRepository.findById(likeDislikeDto.getReviewId());
-        if (optionalReviewEntity.isEmpty()){
-            throw new NoSuchElementException("Review with id: " + likeDislikeDto.getReviewId() + " does not exist");
-        }
-        validateReviewLikeDislikePermissions(optionalReviewEntity.get().getReviewer().getId(), "Users cannot like their own reviews");
-        Optional<LikeEntity> optionalLikeEntity = likeRepository.findByUserIdAndReviewId(likeDislikeDto.getUserId(), likeDislikeDto.getReviewId());
+    public void likeMovieReview(Long directorId, Long movieId, Long reviewId){
+        DirectorEntity directorEntity = directorService.getDirectorEntityById(directorId);
+        ReviewEntity reviewEntity = directorEntity
+                .getMovies()
+                .stream()
+                .filter(movieEntity -> movieEntity.getId().equals(movieId))
+                .findFirst()
+                .orElseThrow(() -> new NoSuchElementException("Director has not made a movie with id: " + movieId))
+                .getReviews()
+                .stream()
+                .filter(review -> review.getId().equals(reviewId))
+                .findFirst()
+                .orElseThrow(() -> new NoSuchElementException("Review with id: " + reviewId + " does not exist"));
+        validateReviewLikeDislikePermissions(reviewEntity.getReviewer().getId(), "Users cannot like their own reviews");
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Optional<LikeEntity> optionalLikeEntity = likeRepository.findByUserIdAndReviewId(userId, reviewId);
         if (optionalLikeEntity.isPresent()){
-            throw new DuplicateDatabaseEntryException("User with id: " + likeDislikeDto.getUserId() + " has already liked this review");
+            throw new DuplicateDatabaseEntryException("User with id: " + userId + " has already liked this review");
         }
-        validateUserPermissions(likeDislikeDto.getUserId(), "User cannot like reviews for other users");
-        ReviewEntity reviewEntity = optionalReviewEntity.get();
-        Optional<DislikeEntity> optionalDislikeEntity = dislikeRepository.findByUserIdAndReviewId(likeDislikeDto.getUserId(), likeDislikeDto.getReviewId());
+        Optional<DislikeEntity> optionalDislikeEntity = dislikeRepository.findByUserIdAndReviewId(userId, reviewId);
         if (optionalDislikeEntity.isPresent()){
-            dislikeRepository.deleteByUserIdAndReviewId(likeDislikeDto.getUserId(), likeDislikeDto.getReviewId());
+            dislikeRepository.deleteByUserIdAndReviewId(userId, reviewId);
         }
-        UserEntity userEntity = userService.getUserEntityById(likeDislikeDto.getUserId());
+        UserEntity userEntity = userService.getUserEntityById(userId);
         LikeEntity likeEntity = new LikeEntity(null, userEntity, reviewEntity);
         likeRepository.save(likeEntity);
         reviewRepository.save(reviewEntity);
@@ -96,23 +158,30 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Transactional
     @Override
-    public void dislikeMovieReview(LikeDislikeDto likeDislikeDto) {
-        Optional<ReviewEntity> optionalReviewEntity = reviewRepository.findById(likeDislikeDto.getReviewId());
-        if (optionalReviewEntity.isEmpty()){
-            throw new NoSuchElementException("Review with id: " + likeDislikeDto.getReviewId() + " does not exist");
-        }
-        validateReviewLikeDislikePermissions(optionalReviewEntity.get().getReviewer().getId(), "Users cannot dislike their own reviews");
-        Optional<DislikeEntity> optionalDislikeEntity = dislikeRepository.findByUserIdAndReviewId(likeDislikeDto.getUserId(), likeDislikeDto.getReviewId());
+    public void dislikeMovieReview(Long directorId, Long movieId, Long reviewId) {
+        DirectorEntity directorEntity = directorService.getDirectorEntityById(directorId);
+        ReviewEntity reviewEntity = directorEntity
+                .getMovies()
+                .stream()
+                .filter(movieEntity -> movieEntity.getId().equals(movieId))
+                .findFirst()
+                .orElseThrow(() -> new NoSuchElementException("Director has not made a movie with id: " + movieId))
+                .getReviews()
+                .stream()
+                .filter(review -> review.getId().equals(reviewId))
+                .findFirst()
+                .orElseThrow(() -> new NoSuchElementException("Review with id: " + reviewId + " does not exist"));
+        validateReviewLikeDislikePermissions(reviewEntity.getReviewer().getId(), "Users cannot dislike their own reviews");
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Optional<DislikeEntity> optionalDislikeEntity = dislikeRepository.findByUserIdAndReviewId(userId, reviewId);
         if (optionalDislikeEntity.isPresent()){
-            throw new DuplicateDatabaseEntryException("User with id: " + likeDislikeDto.getUserId() + " has already disliked this review");
+            throw new DuplicateDatabaseEntryException("User with id: " + userId + " has already disliked this review");
         }
-        validateUserPermissions(likeDislikeDto.getUserId(), "User cannot dislike reviews for other users");
-        ReviewEntity reviewEntity = optionalReviewEntity.get();
-        Optional<LikeEntity> optionalLikeEntity = likeRepository.findByUserIdAndReviewId(likeDislikeDto.getUserId(), likeDislikeDto.getReviewId());
+        Optional<LikeEntity> optionalLikeEntity = likeRepository.findByUserIdAndReviewId(userId, reviewId);
         if (optionalLikeEntity.isPresent()){
-            likeRepository.deleteByUserIdAndReviewId(likeDislikeDto.getUserId(), likeDislikeDto.getReviewId());
+            likeRepository.deleteByUserIdAndReviewId(userId, reviewId);
         }
-        UserEntity userEntity = userService.getUserEntityById(likeDislikeDto.getUserId());
+        UserEntity userEntity = userService.getUserEntityById(userId);
         DislikeEntity dislikeEntity = new DislikeEntity(null, userEntity, reviewEntity);
         dislikeRepository.save(dislikeEntity);
         reviewRepository.save(reviewEntity);

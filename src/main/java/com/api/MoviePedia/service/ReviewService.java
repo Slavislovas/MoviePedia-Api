@@ -1,20 +1,22 @@
 package com.api.MoviePedia.service;
 
-import com.api.MoviePedia.model.review.LikeDislikeDto;
 import com.api.MoviePedia.model.review.ReviewCreationDto;
 import com.api.MoviePedia.model.review.ReviewRetrievalDto;
 
-import java.util.List;
 import java.util.Set;
 
 public interface ReviewService {
-    ReviewRetrievalDto writeMovieReview(ReviewCreationDto reviewCreationDto);
+    ReviewRetrievalDto writeMovieReview(Long directorId, Long movieId, ReviewCreationDto reviewCreationDto);
 
-    void deleteMovieReviewById(Long reviewId);
+    void deleteMovieReviewById(Long directorId, Long movieId, Long reviewId);
 
-    void likeMovieReview(LikeDislikeDto likeDto);
+    void likeMovieReview(Long directorId, Long movieId, Long reviewId);
 
-    void dislikeMovieReview(LikeDislikeDto likeDislikeDto);
+    void dislikeMovieReview(Long directorId, Long movieId, Long reviewId);
 
-    Set<ReviewRetrievalDto> getAllReviewsByMovieId(Long movieId);
+    Set<ReviewRetrievalDto> getAllReviewsByDirectorIdAndMovieId(Long directorId, Long movieId);
+
+    ReviewRetrievalDto getReviewById(Long directorId, Long movieId, Long reviewId);
+
+    ReviewRetrievalDto editReviewById(Long reviewId, Long movieId, Long directorId, ReviewCreationDto creationDto);
 }

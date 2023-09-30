@@ -97,12 +97,6 @@ public class DirectorServiceImpl implements DirectorService {
             throw new NoSuchElementException("Director with id: " + directorId + " does not exist");
         }
         DirectorEntity directorEntity = optionalDirectorEntity.get();
-        if (!directorEntity.getMovies().isEmpty()){
-            StringJoiner stringJoiner = new StringJoiner(",");
-            directorEntity.getMovies().stream().map(MovieEntity::getTitle).forEach(stringJoiner::add);
-            throw new ForeignKeyConstraintViolationException("Cannot delete the director, because they are the director of the following movies: " +
-                    stringJoiner.toString());
-        }
         fileStorageService.deleteFileByPath(directorEntity.getPictureFilePath());
         directorRepository.deleteById(directorId);
     }

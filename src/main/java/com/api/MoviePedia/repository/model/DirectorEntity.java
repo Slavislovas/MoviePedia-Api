@@ -1,5 +1,6 @@
 package com.api.MoviePedia.repository.model;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -44,6 +45,6 @@ public class DirectorEntity {
     @Column(name = "pictureFilePath")
     private String pictureFilePath;
 
-    @OneToMany(mappedBy = "director")
+    @OneToMany(mappedBy = "director", cascade = CascadeType.REMOVE)
     private Set<MovieEntity> movies;
 }

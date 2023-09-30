@@ -24,36 +24,36 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+@RequestMapping("/api/v1")
 @RequiredArgsConstructor
-@RequestMapping("/actor")
 @RestController
 public class ActorController {
     private final ActorService actorService;
 
-    @GetMapping("/get/all")
+    @GetMapping("/actors")
     public ResponseEntity<List<ActorRetrievalDto>> getAllActors(){
         return ResponseEntity.ok(actorService.getAllActors());
     }
 
-    @GetMapping("/get/{id}")
+    @GetMapping("/actors/{id}")
     public ResponseEntity<ActorRetrievalDto> getActorById(@PathVariable("id") Long actorId){
-        return new ResponseEntity<>(actorService.getActorById(actorId), HttpStatus.FOUND);
+        return ResponseEntity.ok(actorService.getActorById(actorId));
     }
 
-    @PostMapping("/create")
+    @PostMapping("/actors")
     public ResponseEntity<ActorRetrievalDto> createActor(@RequestBody @Valid ActorCreationDto actorCreationDto, BindingResult bindingResult) throws IOException {
         validateRequestBodyFields(bindingResult);
         return new ResponseEntity<>(actorService.createActor(actorCreationDto), HttpStatus.CREATED);
     }
 
-    @PutMapping("/edit/{id}")
+    @PutMapping("/actors/{id}")
     public ResponseEntity<ActorRetrievalDto> editActorById(@PathVariable("id") Long actorId, @RequestBody @Valid ActorCreationDto actorCreationDto,
                                                            BindingResult bindingResult) throws IOException {
         validateRequestBodyFields(bindingResult);
         return ResponseEntity.ok(actorService.editActorById(actorId, actorCreationDto));
     }
 
-    @DeleteMapping("/delete/{id}")
+    @DeleteMapping("/actors/{id}")
     public ResponseEntity<Void> deleteActorById(@PathVariable("id") Long actorId){
         actorService.deleteActorById(actorId);
         return ResponseEntity.ok().build();

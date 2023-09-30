@@ -55,16 +55,23 @@ public class MovieServiceImpl implements MovieService {
 
     @Override
     public List<MovieRetrievalDto> getAllMovies() {
-        return movieRepository.findAll().stream().map(movieMapper::entityToRetrievalDto).collect(Collectors.toList());
+        return movieRepository
+                .findAll()
+                .stream()
+                .map(movieMapper::entityToRetrievalDto)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public MovieRetrievalDto getMovieById(Long movieId) {
-        Optional<MovieEntity> optionalMovieEntity = movieRepository.findById(movieId);
-        if (optionalMovieEntity.isEmpty()){
-            throw new NoSuchElementException("Movie with id: " + movieId  + " does not exist");
-        }
-        return movieMapper.entityToRetrievalDto(optionalMovieEntity.get());
+    public MovieRetrievalDto getMovieById(Long directorId, Long movieId) {
+        DirectorEntity directorEntity = directorService.getDirectorEntityById(directorId);
+        MovieEntity movieEntity = directorEntity
+                .getMovies()
+                .stream()
+                .filter(movie -> movie.getId().equals(movieId))
+                .findFirst()
+                .orElseThrow(() -> new NoSuchElementException("Movie with id: " + movieId  + " does not exist"));
+        return movieMapper.entityToRetrievalDto(movieEntity);
     }
 
     @Override
@@ -77,31 +84,35 @@ public class MovieServiceImpl implements MovieService {
     }
 
     @Override
-    public MovieRetrievalDto createMovie(MovieCreationDto movieCreationDto) throws IOException {
-        DirectorEntity directorEntity = directorService.getDirectorEntityById(movieCreationDto.getDirectorId());
-        Set<ActorEntity> actorEntities = new HashSet<>();
-        for (Long actorId : movieCreationDto.getActorIds()) {
-            actorEntities.add(actorService.getActorEntityById(actorId));
-        }
+    public Set<MovieRetrievalDto> getAllMoviesByDirectorId(Long directorId) {
+        DirectorEntity directorEntity = directorService.getDirectorEntityById(directorId);
+        return directorEntity
+                .getMovies()
+                .stream()
+                .map(movieMapper::entityToRetrievalDto)
+                .collect(Collectors.toSet());
+    }
+
+    @Override
+    public MovieRetrievalDto createMovie(Long directorId, MovieCreationDto movieCreationDto) throws IOException {
+        DirectorEntity directorEntity = directorService.getDirectorEntityById(directorId);
         String imageFilePath = fileStorageService.saveFile(movieCreationDto.getPicture(), UUID.randomUUID().toString(), ".png");
-        MovieEntity movieEntity = movieMapper.creationDtoToEntity(movieCreationDto, null, imageFilePath, 0, 0, 0.0, directorEntity, actorEntities, new HashSet<>());
+        MovieEntity movieEntity = movieMapper.creationDtoToEntity(movieCreationDto, null, imageFilePath, 0, 0, 0.0, directorEntity, new HashSet<>(), new HashSet<>());
         return movieMapper.entityToRetrievalDto(movieRepository.save(movieEntity));
     }
 
     @Override
-    public MovieRetrievalDto editMovieById(Long movieId, MovieCreationDto movieCreationDto) throws IOException {
-        Optional<MovieEntity> optionalMovieEntityById = movieRepository.findById(movieId);
-        if (optionalMovieEntityById.isEmpty()){
-            throw new NoSuchElementException("Movie with id: " + movieId  + " does not exist");
-        }
-        String imageFilePath = editMoviePicture(movieCreationDto, optionalMovieEntityById.get());
-        DirectorEntity directorEntity = directorService.getDirectorEntityById(movieCreationDto.getDirectorId());
-        Set<ActorEntity> actorEntities = new HashSet<>();
-        for (Long actorId : movieCreationDto.getActorIds()) {
-            actorEntities.add(actorService.getActorEntityById(actorId));
-        }
-        MovieEntity movieEntity = movieMapper.creationDtoToEntity(movieCreationDto, optionalMovieEntityById.get().getId(), imageFilePath, optionalMovieEntityById.get().getTotalRating(),
-                optionalMovieEntityById.get().getTotalVotes(), optionalMovieEntityById.get().getRating(), directorEntity, actorEntities, optionalMovieEntityById.get().getReviews());
+    public MovieRetrievalDto editMovieById(Long movieId, Long directorId, MovieCreationDto movieCreationDto) throws IOException {
+        DirectorEntity directorEntity = directorService.getDirectorEntityById(directorId);
+        MovieEntity movieEntity = directorEntity
+                .getMovies()
+                .stream()
+                .filter(movie -> movie.getId().equals(movieId))
+                .findFirst()
+                .orElseThrow(() -> new NoSuchElementException("Director has not made a movie with id: " + movieId));
+        String imageFilePath = editMoviePicture(movieCreationDto, movieEntity);
+        movieEntity = movieMapper.creationDtoToEntity(movieCreationDto, movieEntity.getId(), imageFilePath, movieEntity.getTotalRating(),
+                movieEntity.getTotalVotes(),movieEntity.getRating(), directorEntity, movieEntity.getActors(), movieEntity.getReviews());
         return movieMapper.entityToRetrievalDto(movieRepository.save(movieEntity));
     }
 
@@ -115,12 +126,14 @@ public class MovieServiceImpl implements MovieService {
     }
 
     @Override
-    public void deleteMovieById(Long movieId) {
-        Optional<MovieEntity> optionalMovieEntityById = movieRepository.findById(movieId);
-        if (optionalMovieEntityById.isEmpty()){
-            throw new NoSuchElementException("Movie with id: " + movieId  + " does not exist");
-        }
-        MovieEntity movieEntity = optionalMovieEntityById.get();
+    public void deleteMovieById(Long directorId, Long movieId) {
+        DirectorEntity directorEntity = directorService.getDirectorEntityById(directorId);
+        MovieEntity movieEntity = directorEntity
+                .getMovies()
+                .stream()
+                .filter(movie -> movie.getId().equals(movieId))
+                .findFirst()
+                .orElseThrow(() -> new NoSuchElementException("Director has not made a movie with id: " + movieId));
         removeActorsFromMovie(movieEntity);
         removeMovieFromWatchlists(movieEntity);
         removeMovieFromWatchedMovies(movieEntity);
@@ -169,88 +182,97 @@ public class MovieServiceImpl implements MovieService {
     }
 
     @Override
-    public void addMovieToWatchedMovies(Long movieId, Long userId) {
-       validateUserPermissions(userId, "Users can only add movies to their own watched movies list");
-        Optional<MovieEntity> optionalMovieEntity = movieRepository.findById(movieId);
-        if (optionalMovieEntity.isEmpty()){
-            throw new NoSuchElementException("Movie with id: " + movieId  + " does not exist");
-        }
-        UserEntity userEntity = userService.getUserEntityById(userId);
-        MovieEntity movieEntity = optionalMovieEntity.get();
-        userEntity.getWatchedMovies().add(movieEntity);
-        movieRepository.save(movieEntity);
+    public void addMovieToWatchedMovies(Long directorId, Long movieId) {
+       Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+       DirectorEntity directorEntity = directorService.getDirectorEntityById(directorId);
+       MovieEntity movieEntity = directorEntity
+                .getMovies()
+                .stream()
+                .filter(movie -> movie.getId().equals(movieId))
+                .findFirst()
+                .orElseThrow(() -> new NoSuchElementException("Director has not made a movie with id: " + movieId));
+       UserEntity userEntity = userService.getUserEntityById(userId);
+       userEntity.getWatchedMovies().add(movieEntity);
+       movieRepository.save(movieEntity);
     }
 
     @Override
-    public void addMovieToWatchlist(Long movieId, Long userId) {
-        validateUserPermissions(userId, "Users can only add movies to their own watchlist");
-        Optional<MovieEntity> optionalMovieEntity = movieRepository.findById(movieId);
-        if (optionalMovieEntity.isEmpty()){
-            throw new NoSuchElementException("Movie with id: " + movieId  + " does not exist");
-        }
+    public void addMovieToWatchlist(Long directorId, Long movieId) {
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        DirectorEntity directorEntity = directorService.getDirectorEntityById(directorId);
+        MovieEntity movieEntity = directorEntity
+                .getMovies()
+                .stream()
+                .filter(movie -> movie.getId().equals(movieId))
+                .findFirst()
+                .orElseThrow(() -> new NoSuchElementException("Director has not made a movie with id: " + movieId));
         UserEntity userEntity = userService.getUserEntityById(userId);
-        MovieEntity movieEntity = optionalMovieEntity.get();
         userEntity.getWatchlist().add(movieEntity);
         movieRepository.save(movieEntity);
     }
 
     @Override
-    public void deleteMovieFromWatchedMovies(Long movieId, Long userId) {
-        validateUserPermissions(userId, "Users can only delete movies from their own watched movies list");
-        Optional<MovieEntity> optionalMovieEntity = movieRepository.findById(movieId);
-        if (optionalMovieEntity.isEmpty()){
-            throw new NoSuchElementException("Movie with id: " + movieId  + " does not exist");
-        }
+    public void deleteMovieFromWatchedMovies(Long directorId, Long movieId) {
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        DirectorEntity directorEntity = directorService.getDirectorEntityById(directorId);
+        MovieEntity movieEntity = directorEntity
+                .getMovies()
+                .stream()
+                .filter(movie -> movie.getId().equals(movieId))
+                .findFirst()
+                .orElseThrow(() -> new NoSuchElementException("Director has not made a movie with id: " + movieId));
         UserEntity userEntity = userService.getUserEntityById(userId);
-        MovieEntity movieEntity = optionalMovieEntity.get();
         userEntity.getWatchedMovies().remove(movieEntity);
         movieRepository.save(movieEntity);
     }
 
     @Override
-    public void deleteMovieFromWatchlist(Long movieId, Long userId) {
-        validateUserPermissions(userId, "Users can only delete movies from their own watchlist");
-        Optional<MovieEntity> optionalMovieEntity = movieRepository.findById(movieId);
-        if (optionalMovieEntity.isEmpty()){
-            throw new NoSuchElementException("Movie with id: " + movieId  + " does not exist");
-        }
+    public void deleteMovieFromWatchlist(Long directorId, Long movieId) {
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        DirectorEntity directorEntity = directorService.getDirectorEntityById(directorId);
+        MovieEntity movieEntity = directorEntity
+                .getMovies()
+                .stream()
+                .filter(movie -> movie.getId().equals(movieId))
+                .findFirst()
+                .orElseThrow(() -> new NoSuchElementException("Director has not made a movie with id: " + movieId));
         UserEntity userEntity = userService.getUserEntityById(userId);
-        MovieEntity movieEntity = optionalMovieEntity.get();
         userEntity.getWatchlist().remove(movieEntity);
         movieRepository.save(movieEntity);
     }
 
     @Override
-    public Set<MovieRetrievalDto> getWatchedMoviesByUserId(Long userId) {
-        validateUserPermissions(userId, "Users can only view their own watched movies list");
+    public Set<MovieRetrievalDto> getWatchedMoviesByUserId() {
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         UserEntity userEntity = userService.getUserEntityById(userId);
         return userEntity.getWatchedMovies().stream().map(movieMapper::entityToRetrievalDto).collect(Collectors.toSet());
     }
 
     @Override
-    public Set<MovieRetrievalDto> getWatchlistByUserId(Long userId) {
-        validateUserPermissions(userId, "Users can only view their own watchlist");
+    public Set<MovieRetrievalDto> getWatchlistByUserId() {
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         UserEntity userEntity = userService.getUserEntityById(userId);
         return userEntity.getWatchlist().stream().map(movieMapper::entityToRetrievalDto).collect(Collectors.toSet());
     }
 
     @Override
-    public void rateMovieById(RatingCreationDto ratingCreationDto) {
-        validateUserPermissions(ratingCreationDto.getUserId(), "Users cannot rate movies for other users");
-        Optional<MovieEntity> optionalMovieEntity = movieRepository.findById(ratingCreationDto.getMovieId());
-        if (optionalMovieEntity.isEmpty()){
-            throw new NoSuchElementException("Movie with id: " + ratingCreationDto.getMovieId()  + " does not exist");
+    public void rateMovieById(Long directorId, Long movieId, Integer rating) {
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        DirectorEntity directorEntity = directorService.getDirectorEntityById(directorId);
+        MovieEntity movieEntity = directorEntity
+                .getMovies()
+                .stream()
+                .filter(movie -> movie.getId().equals(movieId))
+                .findFirst()
+                .orElseThrow(() -> new NoSuchElementException("Director has not made a movie with id: " + movieId));
+        if(checkIfUserAlreadyRatedMovie(userId, movieEntity)){
+            throw new DuplicateDatabaseEntryException("User with id: " + userId + " has already rated this movie");
         }
-        MovieEntity movieEntity = optionalMovieEntity.get();
-        if(checkIfUserAlreadyRatedMovie(ratingCreationDto.getUserId(), movieEntity)){
-            throw new DuplicateDatabaseEntryException("User with id: " + ratingCreationDto.getUserId() + " has already rated this movie");
-        }
-        movieEntity.rateMovie(ratingCreationDto.getRating());
-        UserEntity userEntity = userService.getUserEntityById(ratingCreationDto.getUserId());
-        RatingEntity ratingEntity = new RatingEntity(null, ratingCreationDto.getRating(), userEntity, movieEntity);
+        movieEntity.rateMovie(rating);
+        UserEntity userEntity = userService.getUserEntityById(userId);
+        RatingEntity ratingEntity = new RatingEntity(null, rating, userEntity, movieEntity);
         movieRepository.save(movieEntity);
         ratingRepository.save(ratingEntity);
-
     }
 
     @Override

@@ -19,4 +19,8 @@ public interface UserService {
     void deleteUserById(Long userId);
 
     List<UserRetrievalDto> getAllUsers();
+
+    UserRetrievalDto createContentCurator(UserCreationDto creationDto);
+
+    List<UserRetrievalDto> getAllContentCurators();
 }

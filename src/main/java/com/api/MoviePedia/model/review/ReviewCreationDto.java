@@ -13,10 +13,4 @@ public class ReviewCreationDto {
     @NotBlank
     @NotNull
     private String text;
-
-    @NotNull
-    private Long reviewerId;
-
-    @NotNull
-    private Long movieId;
 }

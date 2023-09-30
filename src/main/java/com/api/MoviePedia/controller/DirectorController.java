@@ -24,36 +24,36 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-@RequestMapping("/director")
+@RequestMapping("/api/v1")
 @RequiredArgsConstructor
 @RestController
 public class DirectorController {
     private final DirectorService directorService;
 
-    @GetMapping("/get/all")
+    @GetMapping("/directors")
     public ResponseEntity<List<DirectorRetrievalDto>> getAllDirectors(){
         return ResponseEntity.ok(directorService.getAllDirectors());
     }
 
-    @GetMapping("/get/{id}")
+    @GetMapping("/directors/{id}")
     public ResponseEntity<DirectorRetrievalDto> getDirectorById(@PathVariable("id") Long directorId){
-        return new ResponseEntity<>(directorService.getDirectorById(directorId), HttpStatus.FOUND);
+        return ResponseEntity.ok(directorService.getDirectorById(directorId));
     }
 
-    @PostMapping("/create")
+    @PostMapping("/directors")
     public ResponseEntity<DirectorRetrievalDto> createDirector(@RequestBody @Valid DirectorCreationDto directorCreationDto, BindingResult bindingResult) throws IOException {
         validateRequestBodyFields(bindingResult);
         return new ResponseEntity<>(directorService.createDirector(directorCreationDto), HttpStatus.CREATED);
     }
 
-    @PutMapping("/edit/{id}")
+    @PutMapping("/directors/{id}")
     public ResponseEntity<DirectorRetrievalDto> editDirectorById(@PathVariable("id") Long directorId, @RequestBody @Valid DirectorCreationDto directorCreationDto,
                                                                  BindingResult bindingResult) throws IOException {
         validateRequestBodyFields(bindingResult);
         return ResponseEntity.ok(directorService.editDirectorById(directorId, directorCreationDto));
     }
 
-    @DeleteMapping("/delete/{id}")
+    @DeleteMapping("/directors/{id}")
     public ResponseEntity<Void> deleteDirectorById(@PathVariable("id") Long directorId){
         directorService.deleteDirectorById(directorId);
         return ResponseEntity.ok().build();

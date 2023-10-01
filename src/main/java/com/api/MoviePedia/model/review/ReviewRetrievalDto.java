@@ -13,5 +13,5 @@ public class ReviewRetrievalDto {
     private String text;
     private Integer likes;
     private Integer dislikes;
-    private UserRetrievalDto reviewer;
+    private String reviewerUsername;
 }

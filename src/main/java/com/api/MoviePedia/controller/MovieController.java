@@ -14,6 +14,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -94,6 +95,11 @@ public class MovieController {
     public ResponseEntity<MovieRetrievalDto> editMovieById(@PathVariable("movieId") Long movieId, @PathVariable("directorId") Long directorId, @RequestBody @Valid MovieCreationDto movieCreationDto, BindingResult bindingResult) throws IOException {
         validateRequestBodyFields(bindingResult);
         return ResponseEntity.ok(movieService.editMovieById(movieId, directorId, movieCreationDto));
+    }
+
+    @PatchMapping(value = {"/directors/{directorId}/movies/{movieId}/actors/{actorIds}", "/directors/{directorId}/movies/{movieId}/actors"})
+    public ResponseEntity<MovieRetrievalDto> setMovieActors(@PathVariable("directorId") Long directorId, @PathVariable("movieId") Long movieId, @PathVariable(value = "actorIds", required = false) Set<Long> actorIds){
+        return ResponseEntity.ok(movieService.setMovieActors(directorId, movieId, actorIds));
     }
 
     @DeleteMapping("/directors/{directorId}/movies/{movieId}")

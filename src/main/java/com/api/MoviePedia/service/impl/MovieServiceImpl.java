@@ -23,6 +23,7 @@ import com.api.MoviePedia.service.UserService;
 import com.api.MoviePedia.util.ImageComparator;
 import com.api.MoviePedia.util.mapper.MovieMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -123,6 +124,27 @@ public class MovieServiceImpl implements MovieService {
             return oldMovieData.getPictureFilePath();
         }
         return oldMovieData.getPictureFilePath();
+    }
+
+    @Override
+    public MovieRetrievalDto setMovieActors(Long directorId, Long movieId, Set<Long> actorIds) {
+        DirectorEntity directorEntity = directorService.getDirectorEntityById(directorId);
+        MovieEntity movieEntity = directorEntity
+                .getMovies()
+                .stream()
+                .filter(movie -> movie.getId().equals(movieId))
+                .findFirst()
+                .orElseThrow(() -> new NoSuchElementException("Director has not made a movie with id: " + movieId));
+        if (actorIds != null){
+            Set<ActorEntity> actorEntities = new HashSet<>();
+            for (Long actorId : actorIds) {
+                actorEntities.add(actorService.getActorEntityById(actorId));
+            }
+            movieEntity.setActors(actorEntities);
+        } else{
+            movieEntity.setActors(new HashSet<>());
+        }
+        return movieMapper.entityToRetrievalDto(movieRepository.save(movieEntity));
     }
 
     @Override

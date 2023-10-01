@@ -12,7 +12,7 @@ import org.mapstruct.Mapping;
 
 import java.util.Set;
 
-@Mapper(componentModel = "spring", uses = {UserMapper.class})
+@Mapper(componentModel = "spring")
 public abstract class ReviewMapper {
     @Mapping(target = "id", expression = "java(id)")
     @Mapping(target = "likes", expression = "java(likes)")
@@ -23,5 +23,6 @@ public abstract class ReviewMapper {
 
     @Mapping(target = "likes", expression = "java(likes)")
     @Mapping(target = "dislikes", expression = "java(dislikes)")
+    @Mapping(target = "reviewerUsername", source = "entity.reviewer.username")
     public abstract ReviewRetrievalDto entityToRetrievalDto(ReviewEntity entity, Integer likes, Integer dislikes);
 }

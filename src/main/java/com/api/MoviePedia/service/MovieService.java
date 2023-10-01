@@ -42,4 +42,6 @@ public interface MovieService {
     MovieEntity getMovieEntityById(Long movieId);
 
     Set<MovieRetrievalDto> getAllMoviesByDirectorId(Long directorId);
+
+    MovieRetrievalDto setMovieActors(Long directorId, Long movieId, Set<Long> actorIds);
 }

@@ -1,7 +1,6 @@
 package com.api.MoviePedia.service.impl;
 
 import com.api.MoviePedia.exception.DuplicateDatabaseEntryException;
-import com.api.MoviePedia.exception.ForeignKeyConstraintViolationException;
 import com.api.MoviePedia.model.director.DirectorCreationDto;
 import com.api.MoviePedia.model.director.DirectorRetrievalDto;
 import com.api.MoviePedia.repository.DirectorRepository;
@@ -19,7 +18,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
-import java.util.StringJoiner;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -98,6 +96,9 @@ public class DirectorServiceImpl implements DirectorService {
         }
         DirectorEntity directorEntity = optionalDirectorEntity.get();
         fileStorageService.deleteFileByPath(directorEntity.getPictureFilePath());
+        for (MovieEntity movie : directorEntity.getMovies()) {
+            fileStorageService.deleteFileByPath(movie.getPictureFilePath());
+        }
         directorRepository.deleteById(directorId);
     }
 }

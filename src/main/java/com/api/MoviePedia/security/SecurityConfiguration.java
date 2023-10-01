@@ -56,6 +56,8 @@ public class SecurityConfiguration {
                                 .requestMatchers(HttpMethod.DELETE, "/api/v1/actors/**").hasAnyRole("CONTENT_CURATOR", "ADMIN")
                                 .requestMatchers(HttpMethod.POST, "/api/v1/directors/**/movies").hasAnyRole("CONTENT_CURATOR", "ADMIN")
                                 .requestMatchers(HttpMethod.PUT, "/api/v1/directors/**/movies/**").hasAnyRole("CONTENT_CURATOR", "ADMIN")
+                                .requestMatchers(HttpMethod.PATCH, "/api/v1/directors/**/movies/**/actors/**").hasAnyRole("CONTENT_CURATOR", "ADMIN")
+                                .requestMatchers(HttpMethod.PATCH, "/api/v1/directors/**/movies/**/actors").hasAnyRole("CONTENT_CURATOR", "ADMIN")
                                 .requestMatchers(HttpMethod.DELETE, "/api/v1/directors/**/movies/**").hasAnyRole("CONTENT_CURATOR", "ADMIN")
                                 .requestMatchers(HttpMethod.POST, "/api/v1/directors").hasAnyRole("CONTENT_CURATOR", "ADMIN")
                                 .requestMatchers(HttpMethod.PUT, "/api/v1/directors/**").hasAnyRole("CONTENT_CURATOR", "ADMIN")

@@ -2,7 +2,6 @@ package com.api.MoviePedia.service;
 
 import com.api.MoviePedia.model.movie.MovieCreationDto;
 import com.api.MoviePedia.model.movie.MovieRetrievalDto;
-import com.api.MoviePedia.model.movie.RatingCreationDto;
 import com.api.MoviePedia.model.movie.SearchDto;
 import com.api.MoviePedia.repository.model.MovieEntity;
 

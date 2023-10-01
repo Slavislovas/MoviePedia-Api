@@ -14,22 +14,20 @@ import java.util.Set;
 @NoArgsConstructor
 @Data
 public class MovieCreationDto {
-    @NotNull
-    @NotBlank
+    @NotBlank(message = "Title is required")
     private String title;
 
-    @NotNull
-    @NotBlank
+    @NotBlank(message = "Description is required")
     private String description;
 
-    @NotNull
+    @NotNull(message = "Year is required")
     private Integer year;
 
-    @NotNull
+    @NotNull(message = "Genre is required")
     private Genre genre;
 
-    @NotEmpty
-    @NotNull
+    @NotEmpty(message = "Picture is required")
+    @NotNull(message = "Picture is required")
     private byte[] picture;
 
     private String trailerYoutubeUrl;

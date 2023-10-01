@@ -10,7 +10,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 public class ReviewCreationDto {
-    @NotBlank
-    @NotNull
+    @NotBlank(message = "Text is required")
     private String text;
 }

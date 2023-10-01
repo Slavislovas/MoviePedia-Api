@@ -15,22 +15,20 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @Data
 public class DirectorCreationDto {
-    @NotNull
-    @NotBlank
+    @NotBlank(message = "Name is required")
     private String name;
 
-    @NotNull
-    @NotBlank
+    @NotBlank(message = "Surname is required")
     private String surname;
 
-    @NotNull
+    @NotNull(message = "Date of birth is required")
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate dateOfBirth;
 
     private String biography;
 
-    @NotEmpty
-    @NotNull
+    @NotEmpty(message = "Picture is required")
+    @NotNull(message = "Picture is required")
     private byte[] picture;
 }

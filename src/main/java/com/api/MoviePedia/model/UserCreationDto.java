@@ -17,30 +17,25 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @Data
 public class UserCreationDto {
-    @NotBlank
-    @NotNull
+    @NotBlank(message = "Name is required")
     private String name;
 
-    @NotBlank
-    @NotNull
+    @NotBlank(message = "Surname is required")
     private String surname;
 
-    @NotNull
+    @NotNull(message = "Date of birth is required")
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate dateOfBirth;
 
-    @NotBlank
-    @NotNull
-    @Email
+    @NotBlank(message = "Email is required")
+    @Email(message = "Invalid email format")
     private String email;
 
-    @NotBlank
-    @NotNull
+    @NotBlank(message = "Username is required")
     private String username;
 
-    @NotBlank
-    @NotNull
+    @NotBlank(message = "Password is required")
     @Pattern(regexp = "^(?=.*[a-zA-Z0-9]).*(?=.*[!@#$%^&*()_+\\-=\\[\\]{};':\",.<>?]).{8,}$",
             message = "Password must be at least 8 characters long, contain at least one special character and number")
     private String password;

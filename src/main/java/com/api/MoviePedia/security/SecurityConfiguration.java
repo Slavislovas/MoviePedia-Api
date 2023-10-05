@@ -20,7 +20,7 @@ public class SecurityConfiguration {
     private final JWTTokenValidationFilter jwtTokenValidationFilter;
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        return http
+         return http
                 .sessionManagement(httpSecuritySessionManagementConfigurer ->
                         httpSecuritySessionManagementConfigurer.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .csrf(AbstractHttpConfigurer::disable)
@@ -28,6 +28,7 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(authManagerRequestMatcherRegistry ->
                         authManagerRequestMatcherRegistry
                                 .requestMatchers("/api/v1/login").permitAll()
+                                .requestMatchers("/api/v1/refresh/token").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/v1/movies").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/v1/directors/**/movies/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/v1/actors").permitAll()
@@ -68,7 +69,7 @@ public class SecurityConfiguration {
                                 .requestMatchers("/error").permitAll()
                                 .anyRequest()
                                 .authenticated())
-                .httpBasic(Customizer.withDefaults())
-                .build();
+                 .httpBasic(Customizer.withDefaults())
+                 .build();
     }
 }

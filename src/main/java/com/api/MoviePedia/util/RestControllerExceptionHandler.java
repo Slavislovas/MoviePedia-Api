@@ -4,6 +4,7 @@ import com.api.MoviePedia.exception.DuplicateDatabaseEntryException;
 import com.api.MoviePedia.exception.ForeignKeyConstraintViolationException;
 import com.api.MoviePedia.exception.InvalidLoginException;
 import com.api.MoviePedia.exception.RequestBodyFieldValidationException;
+import com.api.MoviePedia.exception.TokenRefreshException;
 import com.api.MoviePedia.model.ExceptionErrorModel;
 import com.api.MoviePedia.model.FieldValidationErrorModel;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -23,7 +24,7 @@ import java.util.NoSuchElementException;
 @RestControllerAdvice
 public class RestControllerExceptionHandler {
     @ExceptionHandler(RequestBodyFieldValidationException.class)
-    public ResponseEntity<List<FieldValidationErrorModel>> handleRequestBodyFieldValidationException(RequestBodyFieldValidationException exception){
+    public ResponseEntity<List<FieldValidationErrorModel>> handleRequestBodyFieldValidationException(RequestBodyFieldValidationException exception) {
         return new ResponseEntity<>(exception.getFieldValidationErrors(), HttpStatus.UNPROCESSABLE_ENTITY);
     }
 
@@ -47,33 +48,38 @@ public class RestControllerExceptionHandler {
         return new ResponseEntity<>(new ExceptionErrorModel(LocalDateTime.now(), 400, exception.getMessage(), request.getServletPath()), HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(value =ExpiredJwtException.class)
+    @ExceptionHandler(ExpiredJwtException.class)
     public ResponseEntity<ExceptionErrorModel> handleExpiredJwtException(ExpiredJwtException exception, HttpServletRequest request){
         return new ResponseEntity<>(new ExceptionErrorModel(LocalDateTime.now(), 401, exception.getMessage(), request.getServletPath()), HttpStatus.UNAUTHORIZED);
     }
 
-    @ExceptionHandler(value = MalformedJwtException.class)
+    @ExceptionHandler(MalformedJwtException.class)
     public ResponseEntity<ExceptionErrorModel> handleMalformedJwtException(MalformedJwtException exception, HttpServletRequest request){
         return new ResponseEntity<>(new ExceptionErrorModel(LocalDateTime.now(), 401, exception.getMessage(), request.getServletPath()), HttpStatus.UNAUTHORIZED);
     }
 
-    @ExceptionHandler(value = UnsupportedJwtException.class)
+    @ExceptionHandler(UnsupportedJwtException.class)
     public ResponseEntity<ExceptionErrorModel> handleUnsupportedJwtException(UnsupportedJwtException exception, HttpServletRequest request){
         return new ResponseEntity<>(new ExceptionErrorModel(LocalDateTime.now(), 401, exception.getMessage(), request.getServletPath()), HttpStatus.UNAUTHORIZED);
     }
 
-    @ExceptionHandler(value = SignatureException.class)
+    @ExceptionHandler(SignatureException.class)
     public ResponseEntity<ExceptionErrorModel> handleSignatureException(SignatureException exception, HttpServletRequest request){
         return new ResponseEntity<>(new ExceptionErrorModel(LocalDateTime.now(), 401, exception.getMessage(), request.getServletPath()), HttpStatus.UNAUTHORIZED);
     }
 
-    @ExceptionHandler(value = IllegalStateException.class)
+    @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<ExceptionErrorModel> handleIllegalStateException(IllegalStateException exception, HttpServletRequest request){
         return new ResponseEntity<>(new ExceptionErrorModel(LocalDateTime.now(), 401, exception.getMessage(), request.getServletPath()), HttpStatus.UNAUTHORIZED);
     }
 
-    @ExceptionHandler(value = SecurityException.class)
+    @ExceptionHandler(SecurityException.class)
     public ResponseEntity<ExceptionErrorModel> handleSecurityExceptionException(SecurityException exception, HttpServletRequest request){
         return new ResponseEntity<>(new ExceptionErrorModel(LocalDateTime.now(), 403, exception.getMessage(), request.getServletPath()), HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(TokenRefreshException.class)
+    public ResponseEntity<ExceptionErrorModel> handleTokenRefreshException(TokenRefreshException exception, HttpServletRequest request){
+        return new ResponseEntity<>(new ExceptionErrorModel(LocalDateTime.now(), 401, exception.getMessage(), request.getServletPath()), HttpStatus.UNAUTHORIZED);
     }
 }

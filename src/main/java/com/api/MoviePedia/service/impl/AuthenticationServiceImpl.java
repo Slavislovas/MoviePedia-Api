@@ -8,6 +8,7 @@ import com.api.MoviePedia.repository.model.UserEntity;
 import com.api.MoviePedia.service.AuthenticationService;
 import com.api.MoviePedia.service.JWTService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -69,5 +70,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         if (optionalUserEntity.isPresent()){
             throw new DuplicateDatabaseEntryException("Email: " + email + " is already taken");
         }
+    }
+
+    @Override
+    public void logoutUser() {
+        Long authenticatedUserId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        jwtService.deleteRefreshTokenByUserId(authenticatedUserId);
     }
 }

@@ -28,6 +28,7 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(authManagerRequestMatcherRegistry ->
                         authManagerRequestMatcherRegistry
                                 .requestMatchers("/api/v1/login").permitAll()
+                                .requestMatchers("/api/v1/logout").authenticated()
                                 .requestMatchers("/api/v1/refresh/token").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/v1/movies").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/v1/directors/**/movies/**").permitAll()

@@ -10,4 +10,6 @@ public interface AuthenticationService {
     void checkIfUsernameIsAvailable(String username);
 
     void checkIfEmailIsAvailable(String email);
+
+    void logoutUser();
 }

@@ -59,6 +59,13 @@ public class JWTServiceImpl implements JWTService {
     }
 
     @Override
+    public void deleteRefreshTokenByUserId(Long userId){
+        UserEntity userEntity = userRepository.findById(userId).orElseThrow(() -> new NoSuchElementException("User with id: " + userId + " does not exist"));
+        RefreshTokenEntity refreshTokenEntity = refreshTokenRepository.findByUserId(userId).orElseThrow(() -> new NoSuchElementException("User with id: " + userId + " is already logged out"));
+        refreshTokenRepository.deleteById(refreshTokenEntity.getId());
+    }
+
+    @Override
     public Map<String, Object> validateToken(String token) {
         SecretKey key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
         Claims claims = Jwts.parserBuilder()
@@ -100,12 +107,11 @@ public class JWTServiceImpl implements JWTService {
     }
 
     @Override
-    public RefreshTokenEntity verifyRefreshTokenExpiration(RefreshTokenEntity refreshTokenEntity){
+    public void verifyRefreshTokenExpiration(RefreshTokenEntity refreshTokenEntity){
         if (refreshTokenEntity.getExpirationDate().isBefore(Instant.now())){
             refreshTokenRepository.deleteById(refreshTokenEntity.getId());
             throw new TokenRefreshException("Refresh token has expired, please log in again");
         }
-        return refreshTokenEntity;
     }
 
     @Override

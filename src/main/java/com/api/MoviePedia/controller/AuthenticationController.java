@@ -4,6 +4,7 @@ import com.api.MoviePedia.model.RefreshTokenRequest;
 import com.api.MoviePedia.service.AuthenticationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,5 +28,11 @@ public class AuthenticationController {
     @PostMapping("/refresh/token")
     public ResponseEntity<Map<String, String>> refreshAccessToken(@RequestBody RefreshTokenRequest refreshTokenRequest){
         return ResponseEntity.ok(authenticationService.refreshAccessToken(refreshTokenRequest.getRefreshToken()));
+    }
+
+    @DeleteMapping("/logout")
+    public ResponseEntity<String> logout(){
+        authenticationService.logoutUser();
+        return ResponseEntity.ok("You have been successfully logged out!");
     }
 }

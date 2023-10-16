@@ -10,13 +10,15 @@ public interface JWTService {
 
     String createRefreshToken(UserEntity userEntity);
 
+    void deleteRefreshTokenByUserId(Long userId);
+
     Map<String, Object> validateToken(String token);
     Long extractUserIdFromToken(String token);
     String extractRoleFromToken(String token);
 
     RefreshTokenEntity findRefreshTokenByToken(String refreshToken);
 
-    RefreshTokenEntity verifyRefreshTokenExpiration(RefreshTokenEntity refreshTokenEntity);
+    void verifyRefreshTokenExpiration(RefreshTokenEntity refreshTokenEntity);
 
     Boolean checkIfRefreshTokenExistsByUserId(Long userId);
 }

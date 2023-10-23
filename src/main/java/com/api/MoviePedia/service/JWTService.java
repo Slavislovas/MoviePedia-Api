@@ -21,4 +21,6 @@ public interface JWTService {
     void verifyRefreshTokenExpiration(RefreshTokenEntity refreshTokenEntity);
 
     Boolean checkIfRefreshTokenExistsByUserId(Long userId);
+
+    RefreshTokenEntity findRefreshTokenByUserId(Long id);
 }

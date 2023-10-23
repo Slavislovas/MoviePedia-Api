@@ -118,4 +118,9 @@ public class JWTServiceImpl implements JWTService {
     public Boolean checkIfRefreshTokenExistsByUserId(Long userId){
         return refreshTokenRepository.findByUserId(userId).isPresent();
     }
+
+    @Override
+    public RefreshTokenEntity findRefreshTokenByUserId(Long id) {
+        return refreshTokenRepository.findByUserId(id).orElseThrow(() -> new NoSuchElementException("Refresh token with user id: " + id + " does not exist"));
+    }
 }

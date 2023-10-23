@@ -32,13 +32,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         if (!bCryptPasswordEncoder.matches(password, optionalUserEntity.get().getPassword())){
             throw new InvalidLoginException("Invalid username or password");
         }
-
+        String refreshToken;
         if (jwtService.checkIfRefreshTokenExistsByUserId(optionalUserEntity.get().getId())){
-            throw new DuplicateDatabaseEntryException("You are already logged in");
+            refreshToken = jwtService.findRefreshTokenByUserId(optionalUserEntity.get().getId()).getToken();
+        } else {
+            refreshToken = jwtService.createRefreshToken(optionalUserEntity.get());
         }
 
         String accessToken = jwtService.generateAccessToken(optionalUserEntity.get().getId(), optionalUserEntity.get().getRole().name());
-        String refreshToken = jwtService.createRefreshToken(optionalUserEntity.get());
         Map<String, String> tokenMap = new HashMap<>();
         tokenMap.put("accessToken", accessToken);
         tokenMap.put("refreshToken", refreshToken);

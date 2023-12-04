@@ -26,10 +26,9 @@ public abstract class UserMapper {
     @Mapping(target = "id", expression = "java(id)")
     @Mapping(target = "username", expression = "java(username)")
     @Mapping(target = "password", expression = "java(password)")
-    @Mapping(target = "role", expression = "java(role)")
     @Mapping(target = "watchlist", expression = "java(watchlist)")
     @Mapping(target = "watchedMovies", expression = "java(watchedMovies)")
     @Mapping(target = "reviews", expression = "java(reviews)")
-    public abstract UserEntity editDtoToEntity(UserEditDto editDto, Long id, String username, String password, Role role,
+    public abstract UserEntity editDtoToEntity(UserEditDto editDto, Long id, String username, String password,
                                                Set<MovieEntity> watchlist, Set<MovieEntity> watchedMovies, Set<ReviewEntity> reviews);
 }

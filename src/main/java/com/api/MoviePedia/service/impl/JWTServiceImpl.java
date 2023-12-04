@@ -1,6 +1,7 @@
 package com.api.MoviePedia.service.impl;
 
 import com.api.MoviePedia.exception.TokenRefreshException;
+import com.api.MoviePedia.model.RefreshTokenRequest;
 import com.api.MoviePedia.repository.RefreshTokenRepository;
 import com.api.MoviePedia.repository.UserRepository;
 import com.api.MoviePedia.repository.model.RefreshTokenEntity;
@@ -63,6 +64,16 @@ public class JWTServiceImpl implements JWTService {
         UserEntity userEntity = userRepository.findById(userId).orElseThrow(() -> new NoSuchElementException("User with id: " + userId + " does not exist"));
         RefreshTokenEntity refreshTokenEntity = refreshTokenRepository.findByUserId(userId).orElseThrow(() -> new NoSuchElementException("User with id: " + userId + " is already logged out"));
         refreshTokenRepository.deleteById(refreshTokenEntity.getId());
+    }
+
+    @Override
+    public void deleteRefreshTokenByToken(RefreshTokenRequest refreshTokenRequest) {
+        try{
+            RefreshTokenEntity refreshTokenEntity = findRefreshTokenByToken(refreshTokenRequest.getRefreshToken());
+            refreshTokenRepository.deleteById(refreshTokenEntity.getId());
+        } catch (Exception ex){
+
+        }
     }
 
     @Override

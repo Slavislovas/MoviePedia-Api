@@ -5,6 +5,7 @@ import com.api.MoviePedia.model.director.DirectorCreationDto;
 import com.api.MoviePedia.model.director.DirectorRetrievalDto;
 import com.api.MoviePedia.repository.DirectorRepository;
 import com.api.MoviePedia.repository.model.DirectorEntity;
+import com.api.MoviePedia.repository.model.ImgurImageEntity;
 import com.api.MoviePedia.repository.model.MovieEntity;
 import com.api.MoviePedia.service.DirectorService;
 import com.api.MoviePedia.service.FileStorageService;
@@ -30,7 +31,7 @@ public class DirectorServiceImpl implements DirectorService {
 
     @Override
     public List<DirectorRetrievalDto> getAllDirectors() {
-        return directorRepository.findAll().stream().map(directorMapper::entityToRetrievalDto).collect(Collectors.toList());
+        return directorRepository.findAll().stream().map(directorEntity -> directorMapper.entityToRetrievalDto(directorEntity, directorEntity.getImgurImageEntity().getLink())).collect(Collectors.toList());
     }
 
     @Override
@@ -39,7 +40,7 @@ public class DirectorServiceImpl implements DirectorService {
         if (optionalDirectorEntity.isEmpty()){
             throw new NoSuchElementException("Director with id: " + directorId + " does not exist");
         }
-        return directorMapper.entityToRetrievalDto(optionalDirectorEntity.get());
+        return directorMapper.entityToRetrievalDto(optionalDirectorEntity.get(), optionalDirectorEntity.get().getImgurImageEntity().getLink());
     }
 
     @Override
@@ -57,9 +58,10 @@ public class DirectorServiceImpl implements DirectorService {
         if (optionalDirectorEntity.isPresent()){
             throw new DuplicateDatabaseEntryException("Director with name: " + directorCreationDto.getName() + " and surname: " + directorCreationDto.getSurname() + " already exists");
         }
-        String imageFilePath = fileStorageService.saveFile(directorCreationDto.getPicture(), UUID.randomUUID().toString(), ".png");
-        DirectorEntity directorEntity = directorMapper.creationDtoToEntity(directorCreationDto, null, imageFilePath, new HashSet<>());
-        return directorMapper.entityToRetrievalDto(directorRepository.save(directorEntity));
+        ImgurImageEntity imgurImageEntity = fileStorageService.saveFile(directorCreationDto.getPicture());
+        DirectorEntity directorEntity = directorMapper.creationDtoToEntity(directorCreationDto, null, imgurImageEntity, new HashSet<>());
+        directorEntity = directorRepository.save(directorEntity);
+        return directorMapper.entityToRetrievalDto(directorEntity, directorEntity.getImgurImageEntity().getLink());
     }
 
     @Override
@@ -74,18 +76,15 @@ public class DirectorServiceImpl implements DirectorService {
                         !optionalDirectorEntityById.get().getSurname().equals(optionalDirectorEntityByNameAndSurname.get().getSurname()))){
             throw new DuplicateDatabaseEntryException("Director with name: " + directorCreationDto.getName() + " and surname: " + directorCreationDto.getSurname() + " already exists");
         }
-        String imageFilePath = editDirectorPicture(directorCreationDto, optionalDirectorEntityById.get());
-        DirectorEntity directorEntity = directorMapper.creationDtoToEntity(directorCreationDto, directorId, imageFilePath, optionalDirectorEntityById.get().getMovies());
-        return directorMapper.entityToRetrievalDto(directorRepository.save(directorEntity));
+        ImgurImageEntity imgurImageEntity = editDirectorPicture(directorCreationDto, optionalDirectorEntityById.get());
+        DirectorEntity directorEntity = directorMapper.creationDtoToEntity(directorCreationDto, directorId, imgurImageEntity, optionalDirectorEntityById.get().getMovies());
+        directorEntity = directorRepository.save(directorEntity);
+        return directorMapper.entityToRetrievalDto(directorEntity, directorEntity.getImgurImageEntity().getLink());
     }
 
-    private String editDirectorPicture(DirectorCreationDto newDirectorData, DirectorEntity oldDirectorData) throws IOException {
-        Boolean picturesAreTheSame = ImageComparator.areImagesEqual(newDirectorData.getPicture(), fileStorageService.retrieveFileContents(oldDirectorData.getPictureFilePath()));
-        if (!picturesAreTheSame){
-            fileStorageService.rewriteFileContents(oldDirectorData.getPictureFilePath(), newDirectorData.getPicture());
-            return oldDirectorData.getPictureFilePath();
-        }
-        return oldDirectorData.getPictureFilePath();
+    private ImgurImageEntity editDirectorPicture(DirectorCreationDto newDirectorData, DirectorEntity oldDirectorData) throws IOException {
+       fileStorageService.deleteFileByHash(oldDirectorData.getImgurImageEntity().getId());
+       return fileStorageService.saveFile(newDirectorData.getPicture());
     }
 
     @Override
@@ -95,9 +94,9 @@ public class DirectorServiceImpl implements DirectorService {
             throw new NoSuchElementException("Director with id: " + directorId + " does not exist");
         }
         DirectorEntity directorEntity = optionalDirectorEntity.get();
-        fileStorageService.deleteFileByPath(directorEntity.getPictureFilePath());
+        fileStorageService.deleteFileByHash(directorEntity.getImgurImageEntity().getId());
         for (MovieEntity movie : directorEntity.getMovies()) {
-            fileStorageService.deleteFileByPath(movie.getPictureFilePath());
+            fileStorageService.deleteFileByHash(movie.getImgurImageEntity().getId());
         }
         directorRepository.deleteById(directorId);
     }

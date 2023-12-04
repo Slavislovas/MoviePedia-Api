@@ -2,6 +2,9 @@ package com.api.MoviePedia.service.impl;
 
 import com.api.MoviePedia.exception.DuplicateDatabaseEntryException;
 import com.api.MoviePedia.exception.InvalidLoginException;
+import com.api.MoviePedia.exception.RequestBodyFieldValidationException;
+import com.api.MoviePedia.model.FieldValidationErrorModel;
+import com.api.MoviePedia.model.RefreshTokenRequest;
 import com.api.MoviePedia.repository.UserRepository;
 import com.api.MoviePedia.repository.model.RefreshTokenEntity;
 import com.api.MoviePedia.repository.model.UserEntity;
@@ -13,6 +16,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -58,24 +62,23 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public void checkIfUsernameIsAvailable(String username) {
+    public void checkIfUsernameIsAvailable(String username, List<FieldValidationErrorModel> fieldErrors) {
         Optional<UserEntity> optionalUserEntity = userRepository.findByUsername(username);
         if (optionalUserEntity.isPresent()){
-            throw new DuplicateDatabaseEntryException("Username: " + username + " is already taken");
+            fieldErrors.add(new FieldValidationErrorModel("username", "Username is taken"));
         }
     }
 
     @Override
-    public void checkIfEmailIsAvailable(String email) {
+    public void checkIfEmailIsAvailable(String email, List<FieldValidationErrorModel> fieldErrors) {
         Optional<UserEntity> optionalUserEntity = userRepository.findByEmail(email);
         if (optionalUserEntity.isPresent()){
-            throw new DuplicateDatabaseEntryException("Email: " + email + " is already taken");
+            fieldErrors.add(new FieldValidationErrorModel("email", "Email is taken"));
         }
     }
 
     @Override
-    public void logoutUser() {
-        Long authenticatedUserId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        jwtService.deleteRefreshTokenByUserId(authenticatedUserId);
+    public void logoutUser(RefreshTokenRequest refreshTokenRequest) {
+        jwtService.deleteRefreshTokenByToken(refreshTokenRequest);
     }
 }

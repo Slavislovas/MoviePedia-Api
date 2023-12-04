@@ -1,5 +1,6 @@
 package com.api.MoviePedia.model;
 
+import com.api.MoviePedia.enumeration.Role;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -32,4 +33,7 @@ public class UserEditDto {
     @NotNull
     @Email
     private String email;
+
+    @NotNull
+    private Role role;
 }

@@ -1,9 +1,9 @@
 package com.api.MoviePedia.controller;
 
 import com.api.MoviePedia.exception.RequestBodyFieldValidationException;
+import com.api.MoviePedia.model.FieldValidationErrorModel;
 import com.api.MoviePedia.model.actor.ActorCreationDto;
 import com.api.MoviePedia.model.actor.ActorRetrievalDto;
-import com.api.MoviePedia.model.FieldValidationErrorModel;
 import com.api.MoviePedia.service.ActorService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

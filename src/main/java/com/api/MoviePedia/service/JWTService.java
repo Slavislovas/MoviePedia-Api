@@ -1,5 +1,6 @@
 package com.api.MoviePedia.service;
 
+import com.api.MoviePedia.model.RefreshTokenRequest;
 import com.api.MoviePedia.repository.model.RefreshTokenEntity;
 import com.api.MoviePedia.repository.model.UserEntity;
 
@@ -11,6 +12,7 @@ public interface JWTService {
     String createRefreshToken(UserEntity userEntity);
 
     void deleteRefreshTokenByUserId(Long userId);
+    void deleteRefreshTokenByToken(RefreshTokenRequest refreshTokenRequest);
 
     Map<String, Object> validateToken(String token);
     Long extractUserIdFromToken(String token);

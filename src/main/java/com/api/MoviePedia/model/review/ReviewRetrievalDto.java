@@ -14,4 +14,6 @@ public class ReviewRetrievalDto {
     private Integer likes;
     private Integer dislikes;
     private String reviewerUsername;
+    private Long reviewerId;
+    private Integer rating;
 }

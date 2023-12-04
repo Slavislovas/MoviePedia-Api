@@ -5,6 +5,7 @@ import com.api.MoviePedia.model.actor.ActorCreationDto;
 import com.api.MoviePedia.model.actor.ActorRetrievalDto;
 import com.api.MoviePedia.repository.ActorRepository;
 import com.api.MoviePedia.repository.model.ActorEntity;
+import com.api.MoviePedia.repository.model.ImgurImageEntity;
 import com.api.MoviePedia.repository.model.MovieEntity;
 import com.api.MoviePedia.service.ActorService;
 import com.api.MoviePedia.service.FileStorageService;
@@ -31,7 +32,7 @@ public class ActorServiceImpl implements ActorService {
 
     @Override
     public List<ActorRetrievalDto> getAllActors() {
-        return actorRepository.findAll().stream().map(actorMapper::entityToRetrievalDto).collect(Collectors.toList());
+        return actorRepository.findAll().stream().map(actorEntity -> actorMapper.entityToRetrievalDto(actorEntity, actorEntity.getImgurImageEntity().getLink())).collect(Collectors.toList());
     }
 
     @Override
@@ -40,7 +41,7 @@ public class ActorServiceImpl implements ActorService {
         if (optionalActorEntity.isEmpty()){
             throw new NoSuchElementException("Actor with id: " + actorId + " does not exist");
         }
-        return actorMapper.entityToRetrievalDto(optionalActorEntity.get());
+        return actorMapper.entityToRetrievalDto(optionalActorEntity.get(), optionalActorEntity.get().getImgurImageEntity().getLink());
     }
 
     @Override
@@ -58,9 +59,15 @@ public class ActorServiceImpl implements ActorService {
         if (optionalActorEntity.isPresent()){
             throw new DuplicateDatabaseEntryException("Actor with name: " + actorCreationDto.getName() + " and surname: " + actorCreationDto.getSurname() + " already exists");
         }
-        String imageFilePath = fileStorageService.saveFile(actorCreationDto.getPicture(), UUID.randomUUID().toString(), ".png");
-        ActorEntity actorEntity = actorMapper.creationDtoToEntity(actorCreationDto, null, imageFilePath, new HashSet<>());
-        return actorMapper.entityToRetrievalDto(actorRepository.save(actorEntity));
+        ImgurImageEntity imgurImageEntity;
+        if (actorCreationDto.getPicture().length != 0){
+            imgurImageEntity = fileStorageService.saveFile(actorCreationDto.getPicture());
+        } else {
+            imgurImageEntity = new ImgurImageEntity();
+        }
+        ActorEntity actorEntity = actorMapper.creationDtoToEntity(actorCreationDto, null, imgurImageEntity, new HashSet<>());
+        actorEntity = actorRepository.save(actorEntity);
+        return actorMapper.entityToRetrievalDto(actorEntity, actorEntity.getImgurImageEntity().getLink());
     }
 
     @Override
@@ -75,18 +82,21 @@ public class ActorServiceImpl implements ActorService {
                         !optionalActorEntityById.get().getSurname().equals(optionalActorEntityByNameAndSurname.get().getSurname()))){
             throw new DuplicateDatabaseEntryException("Actor with name: " + actorCreationDto.getName() + " and surname: " + actorCreationDto.getSurname() + " already exists");
         }
-        String imageFilePath = editActorPicture(actorCreationDto, optionalActorEntityById.get());
-        ActorEntity actorEntity = actorMapper.creationDtoToEntity(actorCreationDto, actorId, imageFilePath, optionalActorEntityById.get().getMovies());
-        return actorMapper.entityToRetrievalDto(actorRepository.save(actorEntity));
+        ImgurImageEntity imgurImageEntity;
+        if (actorCreationDto.getPicture().length != 0){
+            imgurImageEntity = editActorPicture(actorCreationDto, optionalActorEntityById.get());
+        } else{
+            imgurImageEntity = optionalActorEntityById.get().getImgurImageEntity();
+        }
+
+        ActorEntity actorEntity = actorMapper.creationDtoToEntity(actorCreationDto, actorId, imgurImageEntity, optionalActorEntityById.get().getMovies());
+        actorEntity = actorRepository.save(actorEntity);
+        return actorMapper.entityToRetrievalDto(actorEntity, actorEntity.getImgurImageEntity().getLink());
     }
 
-    private String editActorPicture(ActorCreationDto newActorData, ActorEntity oldActorData) throws IOException {
-        Boolean picturesAreTheSame = ImageComparator.areImagesEqual(newActorData.getPicture(), fileStorageService.retrieveFileContents(oldActorData.getPictureFilePath()));
-        if (!picturesAreTheSame){
-            fileStorageService.rewriteFileContents(oldActorData.getPictureFilePath(), newActorData.getPicture());
-            return oldActorData.getPictureFilePath();
-        }
-        return oldActorData.getPictureFilePath();
+    private ImgurImageEntity editActorPicture(ActorCreationDto newActorData, ActorEntity oldActorData) throws IOException {
+        fileStorageService.deleteFileByHash(oldActorData.getImgurImageEntity().getId());
+        return fileStorageService.saveFile(newActorData.getPicture());
     }
 
     @Override
@@ -96,7 +106,7 @@ public class ActorServiceImpl implements ActorService {
             throw new NoSuchElementException("Actor with id: " + actorId + " does not exist");
         }
         ActorEntity actorEntity = optionalActorEntity.get();
-        fileStorageService.deleteFileByPath(actorEntity.getPictureFilePath());
+        fileStorageService.deleteFileByHash(actorEntity.getImgurImageEntity().getId());
         removeActorMovies(actorEntity);
         actorRepository.deleteById(actorId);
     }

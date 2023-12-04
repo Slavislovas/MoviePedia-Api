@@ -14,6 +14,7 @@ import com.api.MoviePedia.repository.model.MovieEntity;
 import com.api.MoviePedia.repository.model.ReviewEntity;
 import com.api.MoviePedia.repository.model.UserEntity;
 import com.api.MoviePedia.service.DirectorService;
+import com.api.MoviePedia.service.MovieService;
 import com.api.MoviePedia.service.ReviewService;
 import com.api.MoviePedia.service.UserService;
 import com.api.MoviePedia.util.mapper.ReviewMapper;
@@ -38,6 +39,7 @@ public class ReviewServiceImpl implements ReviewService {
     private final ReviewMapper reviewMapper;
     private final UserService userService;
     private final DirectorService directorService;
+    private final MovieService movieService;
 
     @Override
     public Set<ReviewRetrievalDto> getAllReviewsByDirectorIdAndMovieId(Long directorId, Long movieId) {
@@ -50,7 +52,13 @@ public class ReviewServiceImpl implements ReviewService {
                 .orElseThrow(() -> new NoSuchElementException("Director has not made a movie with id: " + movieId))
                 .getReviews();
         return reviewEntities.stream()
-                .map(reviewEntity -> reviewMapper.entityToRetrievalDto(reviewEntity, reviewEntity.getLikes().size(), reviewEntity.getDislikes().size())).collect(Collectors.toSet());
+                .map(reviewEntity ->{
+                    ReviewRetrievalDto reviewDto = reviewMapper.entityToRetrievalDto(reviewEntity, reviewEntity.getLikes().size(), reviewEntity.getDislikes().size());
+                    Integer rating = movieService.getRatingByUserIdAndMovieId(reviewEntity.getReviewer().getId(), reviewEntity.getMovie().getId());
+                    reviewDto.setRating(rating);
+                    reviewDto.setReviewerId(reviewEntity.getReviewer().getId());
+                    return reviewDto;
+                }).collect(Collectors.toSet());
     }
 
     @Override

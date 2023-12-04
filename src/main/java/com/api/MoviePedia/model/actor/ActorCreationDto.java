@@ -28,7 +28,5 @@ public class ActorCreationDto {
 
     private String biography;
 
-    @NotEmpty(message = "Picture is required")
-    @NotNull(message = "Picture is required")
     private byte[] picture;
 }

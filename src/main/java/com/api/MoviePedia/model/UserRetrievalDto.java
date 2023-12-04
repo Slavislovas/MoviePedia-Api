@@ -21,4 +21,5 @@ public class UserRetrievalDto {
     private LocalDate dateOfBirth;
     private String email;
     private String username;
+    private Role role;
 }

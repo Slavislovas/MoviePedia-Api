@@ -11,6 +11,7 @@ import com.api.MoviePedia.repository.MovieRepository;
 import com.api.MoviePedia.repository.RatingRepository;
 import com.api.MoviePedia.repository.model.ActorEntity;
 import com.api.MoviePedia.repository.model.DirectorEntity;
+import com.api.MoviePedia.repository.model.ImgurImageEntity;
 import com.api.MoviePedia.repository.model.MovieEntity;
 import com.api.MoviePedia.repository.model.RatingEntity;
 import com.api.MoviePedia.repository.model.UserEntity;
@@ -19,7 +20,6 @@ import com.api.MoviePedia.service.DirectorService;
 import com.api.MoviePedia.service.FileStorageService;
 import com.api.MoviePedia.service.MovieService;
 import com.api.MoviePedia.service.UserService;
-import com.api.MoviePedia.util.ImageComparator;
 import com.api.MoviePedia.util.mapper.MovieMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -27,6 +27,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -57,7 +58,7 @@ public class MovieServiceImpl implements MovieService {
         return movieRepository
                 .findAll()
                 .stream()
-                .map(movieMapper::entityToRetrievalDto)
+                .map(movieEntity -> movieMapper.entityToRetrievalDto(movieEntity, movieEntity.getImgurImageEntity().getLink()))
                 .collect(Collectors.toList());
     }
 
@@ -70,7 +71,25 @@ public class MovieServiceImpl implements MovieService {
                 .filter(movie -> movie.getId().equals(movieId))
                 .findFirst()
                 .orElseThrow(() -> new NoSuchElementException("Movie with id: " + movieId  + " does not exist"));
-        return movieMapper.entityToRetrievalDto(movieEntity);
+
+        MovieRetrievalDto movieRetrievalDto = movieMapper.entityToRetrievalDto(movieEntity, movieEntity.getImgurImageEntity().getLink());
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Role role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream().map(x -> Role.valueOf(x.getAuthority())).toList().get(0);
+        if (!role.name().equals("ROLE_ANONYMOUS")){
+            Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            UserEntity user = userService.getUserEntityById(userId);
+            RatingEntity userRatingForMovie = getUserRatingForMovie(userId, movieEntity);
+            if (userRatingForMovie != null){
+                movieRetrievalDto.setUserRatingForMovie(userRatingForMovie.getRating());
+            } else{
+                movieRetrievalDto.setUserRatingForMovie(0);
+            }
+            movieRetrievalDto.setMovieInUserWatchlist(user.getWatchlist().stream().anyMatch(watchlistMovie -> watchlistMovie.getId().equals(movieRetrievalDto.getId())));
+            movieRetrievalDto.setMovieInUserWatchedMovies(user.getWatchedMovies().stream().anyMatch(watchedMovie -> watchedMovie.getId().equals(movieRetrievalDto.getId())));
+        } else{
+            movieRetrievalDto.setUserRatingForMovie(0);
+        }
+        return movieRetrievalDto;
     }
 
     @Override
@@ -88,16 +107,17 @@ public class MovieServiceImpl implements MovieService {
         return directorEntity
                 .getMovies()
                 .stream()
-                .map(movieMapper::entityToRetrievalDto)
+                .map(movieEntity -> movieMapper.entityToRetrievalDto(movieEntity, movieEntity.getImgurImageEntity().getLink()))
                 .collect(Collectors.toSet());
     }
 
     @Override
     public MovieRetrievalDto createMovie(Long directorId, MovieCreationDto movieCreationDto) throws IOException {
         DirectorEntity directorEntity = directorService.getDirectorEntityById(directorId);
-        String imageFilePath = fileStorageService.saveFile(movieCreationDto.getPicture(), UUID.randomUUID().toString(), ".png");
-        MovieEntity movieEntity = movieMapper.creationDtoToEntity(movieCreationDto, null, imageFilePath, 0, 0, 0.0, directorEntity, new HashSet<>(), new HashSet<>());
-        return movieMapper.entityToRetrievalDto(movieRepository.save(movieEntity));
+        ImgurImageEntity imgurImageEntity = fileStorageService.saveFile(movieCreationDto.getPicture());
+        MovieEntity movieEntity = movieMapper.creationDtoToEntity(movieCreationDto, null, imgurImageEntity, 0, 0, 0.0, directorEntity, new HashSet<>(), new HashSet<>());
+        movieEntity = movieRepository.save(movieEntity);
+        return movieMapper.entityToRetrievalDto(movieEntity, movieEntity.getImgurImageEntity().getLink());
     }
 
     @Override
@@ -109,19 +129,16 @@ public class MovieServiceImpl implements MovieService {
                 .filter(movie -> movie.getId().equals(movieId))
                 .findFirst()
                 .orElseThrow(() -> new NoSuchElementException("Director has not made a movie with id: " + movieId));
-        String imageFilePath = editMoviePicture(movieCreationDto, movieEntity);
-        movieEntity = movieMapper.creationDtoToEntity(movieCreationDto, movieEntity.getId(), imageFilePath, movieEntity.getTotalRating(),
+        ImgurImageEntity imgurImageEntity = editMoviePicture(movieCreationDto, movieEntity);
+        movieEntity = movieMapper.creationDtoToEntity(movieCreationDto, movieEntity.getId(), imgurImageEntity, movieEntity.getTotalRating(),
                 movieEntity.getTotalVotes(),movieEntity.getRating(), directorEntity, movieEntity.getActors(), movieEntity.getReviews());
-        return movieMapper.entityToRetrievalDto(movieRepository.save(movieEntity));
+        movieEntity = movieRepository.save(movieEntity);
+        return movieMapper.entityToRetrievalDto(movieEntity, movieEntity.getImgurImageEntity().getLink());
     }
 
-    private String editMoviePicture(MovieCreationDto newMovieData, MovieEntity oldMovieData) throws IOException {
-        Boolean picturesAreTheSame = ImageComparator.areImagesEqual(newMovieData.getPicture(), fileStorageService.retrieveFileContents(oldMovieData.getPictureFilePath()));
-        if (!picturesAreTheSame){
-            fileStorageService.rewriteFileContents(oldMovieData.getPictureFilePath(), newMovieData.getPicture());
-            return oldMovieData.getPictureFilePath();
-        }
-        return oldMovieData.getPictureFilePath();
+    private ImgurImageEntity editMoviePicture(MovieCreationDto newMovieData, MovieEntity oldMovieData) throws IOException {
+        fileStorageService.deleteFileByHash(oldMovieData.getImgurImageEntity().getId());
+        return fileStorageService.saveFile(newMovieData.getPicture());
     }
 
     @Override
@@ -142,7 +159,8 @@ public class MovieServiceImpl implements MovieService {
         } else{
             movieEntity.setActors(new HashSet<>());
         }
-        return movieMapper.entityToRetrievalDto(movieRepository.save(movieEntity));
+        movieEntity = movieRepository.save(movieEntity);
+        return movieMapper.entityToRetrievalDto(movieEntity, movieEntity.getImgurImageEntity().getLink());
     }
 
     @Override
@@ -157,7 +175,7 @@ public class MovieServiceImpl implements MovieService {
         removeActorsFromMovie(movieEntity);
         removeMovieFromWatchlists(movieEntity);
         removeMovieFromWatchedMovies(movieEntity);
-        fileStorageService.deleteFileByPath(movieEntity.getPictureFilePath());
+        fileStorageService.deleteFileByHash(movieEntity.getImgurImageEntity().getId());
         movieRepository.deleteById(movieId);
     }
 
@@ -198,7 +216,7 @@ public class MovieServiceImpl implements MovieService {
         Specification<MovieEntity> movieSpecification = movieSpecificationBuilder.build();
         Pageable page = PageRequest.of(pageNumber, pageSize, Sort.by("year").descending());
         Page<MovieEntity> moviePage = movieRepository.findAll(movieSpecification, page);
-        return moviePage.toList().stream().map(movieMapper::entityToRetrievalDto).collect(Collectors.toList());
+        return moviePage.toList().stream().map(movieEntity -> movieMapper.entityToRetrievalDto(movieEntity, movieEntity.getImgurImageEntity().getLink())).collect(Collectors.toList());
     }
 
     @Override
@@ -265,14 +283,14 @@ public class MovieServiceImpl implements MovieService {
     public Set<MovieRetrievalDto> getWatchedMoviesByUserId() {
         Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         UserEntity userEntity = userService.getUserEntityById(userId);
-        return userEntity.getWatchedMovies().stream().map(movieMapper::entityToRetrievalDto).collect(Collectors.toSet());
+        return userEntity.getWatchedMovies().stream().map(movieEntity -> movieMapper.entityToRetrievalDto(movieEntity, movieEntity.getImgurImageEntity().getLink())).collect(Collectors.toSet());
     }
 
     @Override
     public Set<MovieRetrievalDto> getWatchlistByUserId() {
         Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         UserEntity userEntity = userService.getUserEntityById(userId);
-        return userEntity.getWatchlist().stream().map(movieMapper::entityToRetrievalDto).collect(Collectors.toSet());
+        return userEntity.getWatchlist().stream().map(movieEntity -> movieMapper.entityToRetrievalDto(movieEntity, movieEntity.getImgurImageEntity().getLink())).collect(Collectors.toSet());
     }
 
     @Override
@@ -286,7 +304,13 @@ public class MovieServiceImpl implements MovieService {
                 .findFirst()
                 .orElseThrow(() -> new NoSuchElementException("Director has not made a movie with id: " + movieId));
         if(checkIfUserAlreadyRatedMovie(userId, movieEntity)){
-            throw new DuplicateDatabaseEntryException("User with id: " + userId + " has already rated this movie");
+            RatingEntity userRating = getUserRatingForMovie(userId, movieEntity);
+            if (userRating != null){
+                movieEntity.setTotalRating(movieEntity.getTotalRating() - userRating.getRating());
+                movieEntity.setTotalVotes(movieEntity.getTotalVotes() - 1);
+                movieEntity.getRatings().remove(userRating);
+                ratingRepository.deleteById(userRating.getId());
+            }
         }
         movieEntity.rateMovie(rating);
         UserEntity userEntity = userService.getUserEntityById(userId);
@@ -297,7 +321,7 @@ public class MovieServiceImpl implements MovieService {
 
     @Override
     public Integer getRatingByUserIdAndMovieId(Long userId, Long movieId) {
-        validateUserPermissions(userId, "Users can only retrieve their own rating for the movie");
+        //validateUserPermissions(userId, "Users can only retrieve their own rating for the movie");
         Optional<MovieEntity> optionalMovieEntity = movieRepository.findById(movieId);
         if (optionalMovieEntity.isEmpty()){
             throw new NoSuchElementException("Movie with id: " + movieId  + " does not exist");
@@ -318,6 +342,15 @@ public class MovieServiceImpl implements MovieService {
             }
         }
         return false;
+    }
+
+    private RatingEntity getUserRatingForMovie(Long userId, MovieEntity movieEntity){
+        for (RatingEntity ratingEntity : movieEntity.getRatings()) {
+            if (ratingEntity.getUser().getId().equals(userId)){
+                return ratingEntity;
+            }
+        }
+        return null;
     }
 
     private void validateUserPermissions(Long userId, String errorMessage) {

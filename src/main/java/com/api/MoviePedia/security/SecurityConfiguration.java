@@ -21,6 +21,7 @@ public class SecurityConfiguration {
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
          return http
+                 .cors(Customizer.withDefaults())
                 .sessionManagement(httpSecuritySessionManagementConfigurer ->
                         httpSecuritySessionManagementConfigurer.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .csrf(AbstractHttpConfigurer::disable)
@@ -28,7 +29,7 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(authManagerRequestMatcherRegistry ->
                         authManagerRequestMatcherRegistry
                                 .requestMatchers("/api/v1/login").permitAll()
-                                .requestMatchers("/api/v1/logout").authenticated()
+                                .requestMatchers("/api/v1/logout").permitAll()
                                 .requestMatchers("/api/v1/refresh/token").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/v1/movies").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/v1/directors/**/movies/**").permitAll()

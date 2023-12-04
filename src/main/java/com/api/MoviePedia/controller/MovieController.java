@@ -73,7 +73,7 @@ public class MovieController {
     }
 
     @PostMapping("/directors/{directorId}/movies/{movieId}/watched")
-    public ResponseEntity<Void> addMovieToWatchedMovies(@PathVariable("directorId") Long directorId, @PathVariable("movieId") Long movieId, @PathVariable("userId") Long userId){
+    public ResponseEntity<Void> addMovieToWatchedMovies(@PathVariable("directorId") Long directorId, @PathVariable("movieId") Long movieId){
         movieService.addMovieToWatchedMovies(directorId, movieId);
         return ResponseEntity.ok().build();
     }

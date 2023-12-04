@@ -19,8 +19,12 @@ public class MovieRetrievalDto {
     private Integer year;
     private Genre genre;
     private Double rating;
+    private Integer totalVotes;
     private String pictureFilePath;
     private String trailerYoutubeUrl;
     private DirectorRetrievalDto director;
     private Set<ActorRetrievalDto> actors;
+    private boolean movieInUserWatchlist;
+    private boolean movieInUserWatchedMovies;
+    private Integer userRatingForMovie;
 }

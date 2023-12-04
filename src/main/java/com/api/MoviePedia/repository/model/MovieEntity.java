@@ -12,6 +12,7 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -45,9 +46,6 @@ public class MovieEntity {
 
     @Column(name = "genre")
     private Genre genre;
-
-    @Column(name = "pictureFilePath")
-    private String pictureFilePath;
 
     @Column(name = "trailerYoutubeUrl")
     private String trailerYoutubeUrl;
@@ -84,6 +82,10 @@ public class MovieEntity {
 
     @ManyToMany(mappedBy = "watchedMovies")
     private Set<UserEntity> usersWhoHaveWatchedMovie;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "id_imgur_image")
+    private ImgurImageEntity imgurImageEntity;
 
     public void rateMovie(Integer rating){
         this.totalRating += rating;

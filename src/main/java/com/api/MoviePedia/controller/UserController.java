@@ -5,6 +5,7 @@ import com.api.MoviePedia.model.FieldValidationErrorModel;
 import com.api.MoviePedia.model.UserCreationDto;
 import com.api.MoviePedia.model.UserEditDto;
 import com.api.MoviePedia.model.UserRetrievalDto;
+import com.api.MoviePedia.service.AuthenticationService;
 import com.api.MoviePedia.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,7 @@ import java.util.List;
 @RestController
 public class UserController {
     private final UserService userService;
+    private final AuthenticationService authenticationService;
 
     @GetMapping("/users")
     public ResponseEntity<List<UserRetrievalDto>> getAllUsers(){
@@ -47,19 +49,19 @@ public class UserController {
 
     @PostMapping("/users")
     public ResponseEntity<UserRetrievalDto> registerUser(@RequestBody @Valid UserCreationDto creationDto, BindingResult bindingResult){
-        validateRequestBodyFields(bindingResult);
+        validateRequestBodyFields(bindingResult, creationDto, null);
         return new ResponseEntity<>(userService.registerUser(creationDto), HttpStatus.CREATED);
     }
 
     @PostMapping("/content_curators")
     public ResponseEntity<UserRetrievalDto> createContentCurator(@RequestBody @Valid UserCreationDto creationDto, BindingResult bindingResult){
-        validateRequestBodyFields(bindingResult);
+        validateRequestBodyFields(bindingResult, creationDto, null);
         return new ResponseEntity<>(userService.createContentCurator(creationDto), HttpStatus.CREATED);
     }
 
     @PutMapping("/users/{id}")
     public ResponseEntity<UserRetrievalDto> editUserById(@PathVariable("id") Long userId, @RequestBody @Valid UserEditDto editDto, BindingResult bindingResult){
-        validateRequestBodyFields(bindingResult);
+        validateRequestBodyFields(bindingResult, null, null);
         return ResponseEntity.ok(userService.editUserById(editDto, userId));
     }
 
@@ -69,11 +71,17 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
-    private void validateRequestBodyFields(BindingResult bindingResult) {
+    private void validateRequestBodyFields(BindingResult bindingResult, UserCreationDto userCreationDto, UserEditDto userEditDto) {
         List<FieldValidationErrorModel> fieldValidationErrors = new ArrayList<>();
         for (FieldError fieldError : bindingResult.getFieldErrors()) {
             fieldValidationErrors.add(new FieldValidationErrorModel(fieldError.getField(), fieldError.getDefaultMessage()));
         }
+
+        if (userCreationDto != null){
+            authenticationService.checkIfUsernameIsAvailable(userCreationDto.getUsername(), fieldValidationErrors);
+            authenticationService.checkIfEmailIsAvailable(userCreationDto.getEmail(), fieldValidationErrors);
+        }
+
         if (!fieldValidationErrors.isEmpty()){
             throw new RequestBodyFieldValidationException(fieldValidationErrors);
         }

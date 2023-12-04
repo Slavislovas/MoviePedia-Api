@@ -1,5 +1,6 @@
 package com.api.MoviePedia.controller;
 
+import com.api.MoviePedia.model.LoginCredentialsDto;
 import com.api.MoviePedia.model.RefreshTokenRequest;
 import com.api.MoviePedia.service.AuthenticationService;
 import lombok.RequiredArgsConstructor;
@@ -20,9 +21,8 @@ public class AuthenticationController {
     private final AuthenticationService authenticationService;
 
     @PostMapping("/login")
-    public ResponseEntity<Map<String, String>> loginUser(@RequestParam("username") String username,
-                                                         @RequestParam("password") String password){
-        return ResponseEntity.ok(authenticationService.loginUser(username, password));
+    public ResponseEntity<Map<String, String>> loginUser(@RequestBody LoginCredentialsDto loginCredentialsDto){
+        return ResponseEntity.ok(authenticationService.loginUser(loginCredentialsDto.getUsername(), loginCredentialsDto.getPassword()));
     }
 
     @PostMapping("/refresh/token")
@@ -31,8 +31,8 @@ public class AuthenticationController {
     }
 
     @DeleteMapping("/logout")
-    public ResponseEntity<String> logout(){
-        authenticationService.logoutUser();
+    public ResponseEntity<String> logout(@RequestBody RefreshTokenRequest refreshTokenRequest){
+        authenticationService.logoutUser(refreshTokenRequest);
         return ResponseEntity.ok("You have been successfully logged out!");
     }
 }

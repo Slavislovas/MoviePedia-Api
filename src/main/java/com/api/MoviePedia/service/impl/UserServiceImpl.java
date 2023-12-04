@@ -2,6 +2,8 @@ package com.api.MoviePedia.service.impl;
 
 import com.api.MoviePedia.enumeration.Role;
 import com.api.MoviePedia.exception.DuplicateDatabaseEntryException;
+import com.api.MoviePedia.exception.RequestBodyFieldValidationException;
+import com.api.MoviePedia.model.FieldValidationErrorModel;
 import com.api.MoviePedia.model.UserCreationDto;
 import com.api.MoviePedia.model.UserEditDto;
 import com.api.MoviePedia.model.UserRetrievalDto;
@@ -15,6 +17,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -31,8 +34,6 @@ public class UserServiceImpl implements UserService {
     private final AuthenticationService authenticationService;
     @Override
     public UserRetrievalDto registerUser(UserCreationDto creationDto) {
-        authenticationService.checkIfUsernameIsAvailable(creationDto.getUsername());
-        authenticationService.checkIfEmailIsAvailable(creationDto.getEmail());
         creationDto.setPassword(bCryptPasswordEncoder.encode(creationDto.getPassword()));
         UserEntity userEntity = userMapper.creationDtoToEntity(creationDto, null, Role.ROLE_USER, new HashSet<>(), new HashSet<>(), new HashSet<>());
         return userMapper.entityToRetrievalDto(userRepository.save(userEntity));
@@ -45,8 +46,12 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserRetrievalDto createContentCurator(UserCreationDto creationDto) {
-        authenticationService.checkIfUsernameIsAvailable(creationDto.getUsername());
-        authenticationService.checkIfEmailIsAvailable(creationDto.getEmail());
+        List<FieldValidationErrorModel> fieldErrors = new ArrayList<>();
+        authenticationService.checkIfUsernameIsAvailable(creationDto.getUsername(), fieldErrors);
+        authenticationService.checkIfEmailIsAvailable(creationDto.getEmail(), fieldErrors);
+        if (!fieldErrors.isEmpty()){
+            throw new RequestBodyFieldValidationException(fieldErrors);
+        }
         creationDto.setPassword(bCryptPasswordEncoder.encode(creationDto.getPassword()));
         UserEntity userEntity = userMapper.creationDtoToEntity(creationDto, null, Role.ROLE_CONTENT_CURATOR, new HashSet<>(), new HashSet<>(), new HashSet<>());
         return userMapper.entityToRetrievalDto(userRepository.save(userEntity));
@@ -91,8 +96,8 @@ public class UserServiceImpl implements UserService {
             throw new DuplicateDatabaseEntryException("Email: " + editDto.getEmail() + " is already taken");
         }
         UserEntity userEntity = userMapper.editDtoToEntity(editDto, optionalUserEntityById.get().getId(), optionalUserEntityById.get().getUsername(),
-                                                            optionalUserEntityById.get().getPassword(), optionalUserEntityById.get().getRole(),
-                                                            optionalUserEntityById.get().getWatchlist(), optionalUserEntityById.get().getWatchedMovies(),
+                                                            optionalUserEntityById.get().getPassword(), optionalUserEntityById.get().getWatchlist(),
+                                                            optionalUserEntityById.get().getWatchedMovies(),
                                                             optionalUserEntityById.get().getReviews());
         return userMapper.entityToRetrievalDto(userRepository.save(userEntity));
     }

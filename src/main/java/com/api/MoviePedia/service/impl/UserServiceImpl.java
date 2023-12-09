@@ -99,6 +99,10 @@ public class UserServiceImpl implements UserService {
                                                             optionalUserEntityById.get().getPassword(), optionalUserEntityById.get().getWatchlist(),
                                                             optionalUserEntityById.get().getWatchedMovies(),
                                                             optionalUserEntityById.get().getReviews());
+        if (role != Role.ROLE_ADMIN){
+            userEntity.setRole(optionalUserEntityById.get().getRole());
+        }
+
         return userMapper.entityToRetrievalDto(userRepository.save(userEntity));
     }
 
